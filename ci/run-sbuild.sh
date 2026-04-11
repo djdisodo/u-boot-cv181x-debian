@@ -62,14 +62,15 @@ done
 [[ -n "$dsc" ]] || die "--dsc is required"
 
 download_debian_archive_keyring() {
-	local cache_dir="${HOME}/.cache/sbuild/keyrings"
+	local cache_root="${SBUILD_KEYRING_CACHE_DIR:-${TMPDIR:-/tmp}/sbuild-keyrings}"
+	local cache_dir="$cache_root"
 	local index_url="${SBUILD_DEBIAN_KEYRING_INDEX_URL:-https://deb.debian.org/debian/pool/main/d/debian-archive-keyring/}"
 	local package_name=""
 	local package_path=""
 	local extracted_dir=""
 	local keyring_path=""
 
-	mkdir -p "$cache_dir"
+	install -d -m 0755 "$cache_dir"
 	package_name=$(
 		curl -fsSL "$index_url" |
 			grep -oE 'debian-archive-keyring_[^"]+_all\.deb' |
