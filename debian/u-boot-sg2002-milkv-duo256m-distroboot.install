@@ -1,0 +1,5 @@
+debian/build/out/sg2002-milkv-duo256m/fip.bin usr/lib/u-boot/sg2002-milkv-duo256m/
+debian/build/out/sg2002-milkv-duo256m/fw_dynamic.bin usr/lib/u-boot/sg2002-milkv-duo256m/
+debian/build/out/sg2002-milkv-duo256m/sg2002-milkv-duo256m-opensbi.dtb usr/lib/u-boot/sg2002-milkv-duo256m/
+debian/build/out/sg2002-milkv-duo256m/u-boot.bin usr/lib/u-boot/sg2002-milkv-duo256m/
+debian/build/out/sg2002-milkv-duo256m/build.env usr/lib/u-boot/sg2002-milkv-duo256m/

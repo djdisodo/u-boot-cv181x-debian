@@ -1,0 +1,29 @@
+Source: u-boot-sg2002-milkv-duo256m-distroboot
+Section: embedded
+Priority: optional
+Maintainer: Packaging Maintainer <maintainer@example.com>
+Build-Depends:
+ debhelper-compat (= 13)
+Build-Depends-Indep:
+ bc,
+ bison,
+ binutils-riscv64-linux-gnu,
+ device-tree-compiler,
+ flex,
+ gcc-riscv64-linux-gnu,
+ libgnutls28-dev,
+ libssl-dev,
+ python3,
+ swig,
+ xz-utils
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+Homepage: https://github.com/djdisodo/u-boot-cv181x
+
+Package: u-boot-sg2002-milkv-duo256m-distroboot
+Architecture: all
+Depends: ${misc:Depends}
+Description: U-Boot and source-built OpenSBI FIP for Milk-V Duo 256M
+ Builds U-Boot for the Milk-V Duo 256M from upstream U-Boot sources,
+ builds OpenSBI from source, embeds an upstream-kernel-based board DTB,
+ and packages the resulting firmware artifacts as a Debian package.

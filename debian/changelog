@@ -1,0 +1,7 @@
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-1) unstable; urgency=medium
+
+  * Initial Debian packaging for the Milk-V Duo 256M distroboot firmware.
+  * Build U-Boot from upstream sources and OpenSBI from source.
+  * Assemble fip.bin with the local FSBL, DDR parameter block, and RTOS blobs.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sun, 12 Apr 2026 00:06:00 +0900

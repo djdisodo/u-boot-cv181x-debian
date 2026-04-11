@@ -1,0 +1,27 @@
+This repository intentionally keeps only the Debian packaging recipe.
+
+The intended unpack/import step is handled by `gbp import-orig`, using the
+configuration in `debian/gbp.conf`. The upstream tarballs are fetched via
+`uscan` and imported into a disposable Git clone as a normal Debian source
+tree.
+
+Typical flow:
+
+  cd /root/uboot
+  git clone ./new_recipe build/u-boot-sg2002-milkv-duo256m-distroboot-gbp
+  cd build/u-boot-sg2002-milkv-duo256m-distroboot-gbp
+  gbp import-orig --uscan --no-interactive
+
+Build a source package:
+
+  dpkg-source -b .
+
+Build a binary package:
+
+  dpkg-buildpackage -us -uc -b
+
+Patches are stored in `debian/patches` because the source format is
+`3.0 (quilt)`, but the intended maintainer workflow is to update them from the
+imported source tree with:
+
+  dpkg-source --commit

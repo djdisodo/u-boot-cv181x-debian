@@ -1,0 +1,48 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+BOARD_NAME := sg2002-milkv-duo256m
+BOARD_DEFCONFIG := sg2002_milkv_duo256m_defconfig
+INSTALL_DIR := /usr/lib/u-boot/$(BOARD_NAME)
+BUILD_DIR := $(CURDIR)/debian/build
+CROSS_COMPILE ?= riscv64-linux-gnu-
+OPENSBI_PLATFORM := generic
+TARGET_ARCH := riscv64
+KERNEL_DTS_SOURCE_URL := https://github.com/torvalds/linux.git
+KERNEL_DTS_SOURCE_REV := e774d5f1bc27a85f858bce7688509e866f8e8a4e
+PACKAGE_NAME := $(shell dpkg-parsechangelog --show-field Source)
+PACKAGE_VERSION := $(shell dpkg-parsechangelog --show-field Version | sed 's/-[^-]*$$//')
+PACKAGE_RELEASE := $(shell dpkg-parsechangelog --show-field Version | sed 's/^.*-//')
+U_BOOT_VERSION := $(shell printf '%s\n' '$(PACKAGE_VERSION)' | sed 's/+~.*$$//')
+OPENSBI_VERSION := $(shell printf '%s\n' '$(PACKAGE_VERSION)' | sed -n 's/^[^+]*+~//p')
+
+%:
+	dh $@
+
+override_dh_auto_build-indep:
+	debian/scripts/build-artifacts.sh \
+		--source-dir "$(CURDIR)" \
+		--build-dir "$(BUILD_DIR)" \
+		--cross-compile "$(CROSS_COMPILE)" \
+		--board-name "$(BOARD_NAME)" \
+		--board-defconfig "$(BOARD_DEFCONFIG)" \
+		--install-dir "$(INSTALL_DIR)" \
+		--opensbi-platform "$(OPENSBI_PLATFORM)" \
+		--target-arch "$(TARGET_ARCH)" \
+		--package-name "$(PACKAGE_NAME)" \
+		--package-version "$(PACKAGE_VERSION)" \
+		--package-release "$(PACKAGE_RELEASE)" \
+		--u-boot-version "$(U_BOOT_VERSION)" \
+		--opensbi-version "$(OPENSBI_VERSION)" \
+		--kernel-dts-source-url "$(KERNEL_DTS_SOURCE_URL)" \
+		--kernel-dts-source-rev "$(KERNEL_DTS_SOURCE_REV)"
+
+override_dh_auto_install-indep:
+	:
+
+override_dh_auto_test:
+	:
+
+override_dh_auto_clean:
+	rm -rf $(BUILD_DIR)

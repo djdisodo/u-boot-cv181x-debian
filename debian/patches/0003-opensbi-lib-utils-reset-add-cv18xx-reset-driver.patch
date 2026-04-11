@@ -1,0 +1,154 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OBS Packaging Maintainer <maintainer@example.com>
+Date: Sat, 11 Apr 2026 22:30:00 +0900
+Subject: [PATCH] opensbi: lib: utils: reset: add CV18xx reset driver
+
+SG2002 and related CV18xx parts cannot reboot through a plain syscon reset
+write. They require a board-specific RTCSYS sequence, matching the upstream
+Linux cv18xx reset flow.
+
+Signed-off-by: OBS Packaging Maintainer <maintainer@example.com>
+---
+ opensbi/lib/utils/reset/Kconfig             |  5 ++
+ opensbi/lib/utils/reset/fdt_reset_cv18xx.c | 86 +++++++++++++++++++++++++++++
+ opensbi/lib/utils/reset/objects.mk         |  3 +
+ opensbi/platform/generic/configs/defconfig |  1 +
+ 4 files changed, 95 insertions(+)
+ create mode 100644 opensbi/lib/utils/reset/fdt_reset_cv18xx.c
+
+diff --git a/opensbi/lib/utils/reset/Kconfig b/opensbi/lib/utils/reset/Kconfig
+index ff3f88d..b8f87ea 100644
+--- a/opensbi/lib/utils/reset/Kconfig
++++ b/opensbi/lib/utils/reset/Kconfig
+@@ -18,6 +18,11 @@ config FDT_RESET_GPIO
+ 	depends on FDT_GPIO
+ 	default n
+ 
++config FDT_RESET_CV18XX
++	bool "Cvitek CV18xx and Sophgo SG2000 FDT reset driver"
++	depends on FDT_REGMAP
++	default n
++
+ config FDT_RESET_HTIF
+ 	bool "Host transfer interface (HTIF) FDT reset driver"
+ 	select SYS_HTIF
+diff --git a/opensbi/lib/utils/reset/fdt_reset_cv18xx.c b/opensbi/lib/utils/reset/fdt_reset_cv18xx.c
+new file mode 100644
+index 0000000..9345735
+--- /dev/null
++++ b/opensbi/lib/utils/reset/fdt_reset_cv18xx.c
+@@ -0,0 +1,86 @@
++/*
++ * SPDX-License-Identifier: BSD-2-Clause
++ *
++ * Copyright (c) 2026 OBS Packaging Maintainer
++ */
++
++#include <libfdt.h>
++#include <sbi/sbi_bitops.h>
++#include <sbi/sbi_ecall_interface.h>
++#include <sbi/sbi_error.h>
++#include <sbi/sbi_hart.h>
++#include <sbi/sbi_system.h>
++#include <sbi_utils/fdt/fdt_driver.h>
++#include <sbi_utils/regmap/fdt_regmap.h>
++#include <sbi_utils/regmap/regmap.h>
++
++#define RTC_CTRL_UNLOCKKEY	0x04
++#define RTC_CTRL0		0x08
++#define REQ_PWR_CYC		BIT(3)
++#define REQ_WARM_RST		BIT(4)
++
++#define RTC_EN_PWR_CYC_REQ	0x10C8
++#define RTC_EN_WARM_RST_REQ	0x10CC
++
++static struct regmap *rtcsys_regs;
++
++static int cv18xx_reset_check(u32 type, u32 reason)
++{
++	switch (type) {
++	case SBI_SRST_RESET_TYPE_COLD_REBOOT:
++	case SBI_SRST_RESET_TYPE_WARM_REBOOT:
++		return 255;
++	}
++
++	return 0;
++}
++
++static void cv18xx_reset(u32 type, u32 reason)
++{
++	u32 reg_en = RTC_EN_WARM_RST_REQ;
++	u32 request = REQ_WARM_RST;
++
++	if (type == SBI_SRST_RESET_TYPE_COLD_REBOOT) {
++		reg_en = RTC_EN_PWR_CYC_REQ;
++		request = REQ_PWR_CYC;
++	}
++
++	regmap_write(rtcsys_regs, reg_en, 1);
++	regmap_write(rtcsys_regs, RTC_CTRL_UNLOCKKEY, 0xAB18);
++	regmap_write(rtcsys_regs, RTC_CTRL0, 0xFFFF0800 | request);
++
++	sbi_hart_hang();
++}
++
++static struct sbi_system_reset_device cv18xx_reset_device = {
++	.name = "cv18xx-reset",
++	.system_reset_check = cv18xx_reset_check,
++	.system_reset = cv18xx_reset,
++};
++
++static int cv18xx_reset_init(const void *fdt, int nodeoff,
++			     const struct fdt_match *match)
++{
++	int len, rc;
++	const fdt32_t *val;
++
++	val = fdt_getprop(fdt, nodeoff, "sophgo,rtcsys", &len);
++	if (!val || len < 4)
++		return SBI_EINVAL;
++	rc = fdt_regmap_get_by_phandle(fdt, fdt32_to_cpu(*val), &rtcsys_regs);
++	if (rc)
++		return rc;
++
++	sbi_system_reset_add_device(&cv18xx_reset_device);
++	return 0;
++}
++
++static const struct fdt_match cv18xx_reset_match[] = {
++	{ .compatible = "sophgo,cv1800-reset" },
++	{ },
++};
++
++const struct fdt_driver fdt_reset_cv18xx = {
++	.match_table = cv18xx_reset_match,
++	.init = cv18xx_reset_init,
++};
+diff --git a/opensbi/lib/utils/reset/objects.mk b/opensbi/lib/utils/reset/objects.mk
+index 3b40bf1..31542b0 100644
+--- a/opensbi/lib/utils/reset/objects.mk
++++ b/opensbi/lib/utils/reset/objects.mk
+@@ -10,6 +10,9 @@ carray-fdt_early_drivers-$(CONFIG_FDT_RESET_ATCWDT200) += fdt_reset_atcwdt200
+ libsbiutils-objs-$(CONFIG_FDT_RESET_ATCWDT200) += reset/fdt_reset_atcwdt200.o
+ 
+ carray-fdt_early_drivers-$(CONFIG_FDT_RESET_GPIO) += fdt_poweroff_gpio
++carray-fdt_early_drivers-$(CONFIG_FDT_RESET_CV18XX) += fdt_reset_cv18xx
++libsbiutils-objs-$(CONFIG_FDT_RESET_CV18XX) += reset/fdt_reset_cv18xx.o
++
+ carray-fdt_early_drivers-$(CONFIG_FDT_RESET_GPIO) += fdt_reset_gpio
+ libsbiutils-objs-$(CONFIG_FDT_RESET_GPIO) += reset/fdt_reset_gpio.o
+ 
+diff --git a/opensbi/platform/generic/configs/defconfig b/opensbi/platform/generic/configs/defconfig
+index 4f7aa50..1402a8b 100644
+--- a/opensbi/platform/generic/configs/defconfig
++++ b/opensbi/platform/generic/configs/defconfig
+@@ -39,6 +39,7 @@ CONFIG_FDT_REGMAP=y
+ CONFIG_FDT_REGMAP_SYSCON=y
+ CONFIG_FDT_RESET=y
+ CONFIG_FDT_RESET_ATCWDT200=y
++CONFIG_FDT_RESET_CV18XX=y
+ CONFIG_FDT_RESET_GPIO=y
+ CONFIG_FDT_RESET_HTIF=y
+ CONFIG_FDT_RESET_RPMI=y
+-- 
+2.50.0
