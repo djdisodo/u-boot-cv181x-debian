@@ -52,6 +52,8 @@ done
 [[ -n "$generated_branch" ]] || die "--generated-branch is required"
 [[ -n "$workspace" ]] || die "--workspace is required"
 
+ensure_git_identity
+
 repo=$(repo_root)
 download_dir=${download_dir:-"$(dirname -- "$workspace")"}
 

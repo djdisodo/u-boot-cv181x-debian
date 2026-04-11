@@ -52,6 +52,35 @@ write_output() {
 	printf '%s=%s\n' "$key" "$value" >>"$output_file"
 }
 
+ensure_git_identity() {
+	local name=""
+	local email=""
+
+	name=${GIT_AUTHOR_NAME:-${GIT_COMMITTER_NAME:-}}
+	email=${GIT_AUTHOR_EMAIL:-${GIT_COMMITTER_EMAIL:-}}
+
+	if [[ -z "$name" ]]; then
+		name=$(git config --get user.name 2>/dev/null || true)
+	fi
+
+	if [[ -z "$email" ]]; then
+		email=$(git config --get user.email 2>/dev/null || true)
+	fi
+
+	if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+		name=${name:-${CI_GIT_NAME:-github-actions[bot]}}
+		email=${email:-${CI_GIT_EMAIL:-41898282+github-actions[bot]@users.noreply.github.com}}
+	else
+		name=${name:-${CI_GIT_NAME:-recipe-ci}}
+		email=${email:-${CI_GIT_EMAIL:-recipe-ci@local.invalid}}
+	fi
+
+	export GIT_AUTHOR_NAME="${GIT_AUTHOR_NAME:-$name}"
+	export GIT_AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL:-$email}"
+	export GIT_COMMITTER_NAME="${GIT_COMMITTER_NAME:-$name}"
+	export GIT_COMMITTER_EMAIL="${GIT_COMMITTER_EMAIL:-$email}"
+}
+
 ensure_local_branch_from_remote() {
 	local remote="$1"
 	local branch="$2"
