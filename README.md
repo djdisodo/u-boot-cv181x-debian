@@ -12,9 +12,13 @@ Typical local flow:
 
 ```sh
 cd /root/uboot
-git clone ./new_recipe build/u-boot-sg2002-milkv-duo256m-distroboot-gbp
+gbp clone --debian-branch=debian/latest --upstream-branch=upstream/latest \
+  ./new_recipe build/u-boot-sg2002-milkv-duo256m-distroboot-gbp
 cd build/u-boot-sg2002-milkv-duo256m-distroboot-gbp
-gbp import-orig --uscan --no-interactive
+version=$(dpkg-parsechangelog --show-field Version | sed 's/-[^-]*$//')
+uscan --check-dirname-level 0 --download-current-version --rename --destdir ..
+gbp import-orig --no-interactive --upstream-version "$version" \
+  ../u-boot-sg2002-milkv-duo256m-distroboot_${version}.orig.tar.xz
 dpkg-buildpackage -us -uc -b
 ```
 
