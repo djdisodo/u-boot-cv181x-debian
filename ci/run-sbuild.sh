@@ -58,6 +58,10 @@ done
 
 cd "$workspace"
 
+user_name=$(id -un)
+getsubids "$user_name" >/dev/null 2>&1 || die "missing subuid allocation for ${user_name}; configure /etc/subuid before using sbuild unshare mode"
+getsubids -g "$user_name" >/dev/null 2>&1 || die "missing subgid allocation for ${user_name}; configure /etc/subgid before using sbuild unshare mode"
+
 source_pkg=$(package_source_name)
 full_version=$(package_full_version)
 upstream_version=$(package_upstream_version)
@@ -98,6 +102,10 @@ for file in \
 	"${parent_dir}/${source_pkg}_${full_version}"*.udeb \
 	"${parent_dir}/${source_pkg}_${full_version}"*.changes \
 	"${parent_dir}/${source_pkg}_${full_version}"*.buildinfo \
+	"${build_dir}/${source_pkg}_${full_version}"*.deb \
+	"${build_dir}/${source_pkg}_${full_version}"*.udeb \
+	"${build_dir}/${source_pkg}_${full_version}"*.changes \
+	"${build_dir}/${source_pkg}_${full_version}"*.buildinfo \
 	"${build_dir}"/**/"${source_pkg}_${full_version}"*.build; do
 	if [[ -f "$file" ]]; then
 		cp -a "$file" "$artifact_dir"/
