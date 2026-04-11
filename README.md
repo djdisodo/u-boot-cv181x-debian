@@ -55,6 +55,10 @@ For Cloudflare R2, set for example:
 - `DEB_S3_ENDPOINT=https://<account_id>.r2.cloudflarestorage.com`
 - `DEB_S3_FORCE_PATH_STYLE=0`
 
+`ci/run-sbuild.sh` will refresh the Debian archive keyring from the official
+Debian package pool when bootstrapping a Debian mirror, and you can override
+that with `SBUILD_KEYRING=/path/to/keyring.gpg` if you need a custom mirror.
+
 Publish defaults:
 
 - repository locking is enabled by default

@@ -12,6 +12,7 @@ mirror="${SBUILD_MIRROR:-http://deb.debian.org/debian}"
 build_dir=""
 artifact_dir=""
 output_file=""
+keyring=""
 
 while (($#)); do
 	case "$1" in
@@ -39,6 +40,10 @@ while (($#)); do
 			build_dir="$2"
 			shift 2
 			;;
+		--keyring)
+			keyring="$2"
+			shift 2
+			;;
 		--artifact-dir)
 			artifact_dir="$2"
 			shift 2
@@ -56,6 +61,39 @@ done
 [[ -n "$workspace" ]] || die "--workspace is required"
 [[ -n "$dsc" ]] || die "--dsc is required"
 
+download_debian_archive_keyring() {
+	local cache_dir="${HOME}/.cache/sbuild/keyrings"
+	local index_url="${SBUILD_DEBIAN_KEYRING_INDEX_URL:-https://deb.debian.org/debian/pool/main/d/debian-archive-keyring/}"
+	local package_name=""
+	local package_path=""
+	local extracted_dir=""
+	local keyring_path=""
+
+	mkdir -p "$cache_dir"
+	package_name=$(
+		curl -fsSL "$index_url" |
+			grep -oE 'debian-archive-keyring_[^"]+_all\.deb' |
+			sort -uV |
+			tail -n 1
+	)
+	[[ -n "$package_name" ]] || die "unable to determine latest debian-archive-keyring package from $index_url"
+
+	package_path="${cache_dir}/${package_name}"
+	keyring_path="${cache_dir}/${package_name%.deb}.gpg"
+
+	if [[ ! -f "$keyring_path" ]]; then
+		curl -fsSL -o "$package_path" "${index_url}${package_name}"
+		extracted_dir=$(mktemp -d)
+		dpkg-deb -x "$package_path" "$extracted_dir"
+		install -m 0644 \
+			"$extracted_dir/usr/share/keyrings/debian-archive-keyring.gpg" \
+			"$keyring_path"
+		rm -rf "$extracted_dir"
+	fi
+
+	printf '%s\n' "$keyring_path"
+}
+
 cd "$workspace"
 
 user_name=$(id -un)
@@ -71,11 +109,28 @@ arch=${arch:-${SBUILD_ARCH:-$(dpkg --print-architecture)}}
 build_dir=${build_dir:-"$(dirname -- "$workspace")/sbuild-out"}
 artifact_dir=${artifact_dir:-"$(dirname -- "$workspace")/artifacts"}
 chroot_tarball="${HOME}/.cache/sbuild/${suite}-${arch}.tar"
+keyring=${keyring:-${SBUILD_KEYRING:-}}
 
 mkdir -p "$build_dir" "$artifact_dir" "$(dirname -- "$chroot_tarball")"
 
+if [[ -z "$keyring" ]]; then
+	if [[ "$mirror" == *deb.debian.org/debian* || "$mirror" == *ftp.debian.org/debian* ]]; then
+		keyring=$(download_debian_archive_keyring)
+	elif [[ -f /usr/share/keyrings/debian-archive-keyring.gpg ]]; then
+		keyring=/usr/share/keyrings/debian-archive-keyring.gpg
+	fi
+fi
+
+if [[ -n "$keyring" ]]; then
+	[[ -r "$keyring" ]] || die "keyring is not readable: $keyring"
+fi
+
 if [[ ! -f "$chroot_tarball" ]]; then
-	mmdebstrap --variant=buildd "$suite" "$chroot_tarball" "$mirror"
+	mmdebstrap_args=(--variant=buildd)
+	if [[ -n "$keyring" ]]; then
+		mmdebstrap_args+=(--keyring "$keyring")
+	fi
+	mmdebstrap "${mmdebstrap_args[@]}" "$suite" "$chroot_tarball" "$mirror"
 fi
 
 sbuild \
@@ -116,3 +171,4 @@ write_output "$output_file" artifact_dir "$artifact_dir"
 write_output "$output_file" suite "$suite"
 write_output "$output_file" arch "$arch"
 write_output "$output_file" chroot_tarball "$chroot_tarball"
+write_output "$output_file" keyring "${keyring:-}"
