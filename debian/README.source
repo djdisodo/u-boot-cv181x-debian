@@ -3,8 +3,8 @@ This repository intentionally keeps only the Debian packaging recipe.
 The intended unpack/import step is handled by `gbp import-orig`, using the
 configuration in `debian/gbp.conf`. CI regenerates the `latest`,
 `upstream/latest`, and `pristine-tar` branches from the recipe-only
-`latest-recipe` branch, overlaying the full recipe branch on top of the
-imported upstream tree.
+`latest-recipe` branch by reapplying `debian/` on top of the imported
+upstream tree.
 
 Typical flow:
 

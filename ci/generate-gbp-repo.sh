@@ -98,9 +98,9 @@ if ! gbp import-orig \
 		import_mode="reuse-existing-upstream"
 		recipe_ref="refs/remotes/${remote}/${source_branch}"
 		upstream_ref="refs/heads/${upstream_branch}"
-		find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+		find . -mindepth 1 -maxdepth 1 ! -name .git ! -name debian -exec rm -rf {} +
 		git checkout "$upstream_ref" -- .
-		git checkout "$recipe_ref" -- .
+		git checkout "$recipe_ref" -- debian
 		git add -A
 		tree_id=$(git write-tree)
 		parent_recipe=$(git rev-parse "$recipe_ref")

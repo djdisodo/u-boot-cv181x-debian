@@ -9,15 +9,15 @@ U-Boot/OpenSBI firmware package.
 - `latest-recipe`: recipe-only branch. CI builds, regenerates the published
   `gbp` branches, pushes them back to GitHub, and publishes `.deb` files to
   `deb-s3`.
-- `latest`: generated build branch with unpacked upstream sources plus the
-  packaging files from the recipe branch.
+- `latest`: generated build branch with unpacked upstream sources plus
+  `debian/`.
 - `upstream/latest`: imported upstream source branch for `gbp`.
 - `pristine-tar`: `pristine-tar` metadata.
 
 The recipe branches intentionally do not contain the upstream source tree. The
 generated `latest` branch is reconstructed by CI with `uscan` and
-`gbp import-orig`, or by re-overlaying the full recipe branch onto the
-existing imported upstream branch when the upstream version has not changed.
+`gbp import-orig`, or by reapplying `debian/` onto the existing imported
+upstream branch when the upstream version has not changed.
 
 **Local build flow**
 
