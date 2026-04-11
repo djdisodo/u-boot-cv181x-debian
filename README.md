@@ -42,7 +42,7 @@ with `dpkg-source --commit`.
 - `DEB_S3_BUCKET` repo variable: required for `deb-s3` publishing.
 - `DEB_S3_CODENAME`, `DEB_S3_COMPONENT`, `DEB_S3_REGION`, `DEB_S3_ENDPOINT`,
   `DEB_S3_FORCE_PATH_STYLE`, `DEB_S3_PREFIX`, `DEB_S3_ORIGIN`, `DEB_S3_SUITE`,
-  `DEB_S3_PRESERVE_VERSIONS`, `DEB_S3_LOCK`, `DEB_S3_FAIL_IF_EXISTS`,
+  `DEB_S3_CLEAN`, `DEB_S3_PRESERVE_VERSIONS`, `DEB_S3_LOCK`, `DEB_S3_FAIL_IF_EXISTS`,
   `DEB_S3_VISIBILITY` repo variables: optional publish controls.
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` secrets:
   used by `deb-s3`.
@@ -54,3 +54,11 @@ For Cloudflare R2, set for example:
 - `DEB_S3_REGION=auto`
 - `DEB_S3_ENDPOINT=https://<account_id>.r2.cloudflarestorage.com`
 - `DEB_S3_FORCE_PATH_STYLE=0`
+
+Publish defaults:
+
+- repository locking is enabled by default
+- old package versions are removed from manifests by default
+- dangling old `.deb` objects are cleaned from the bucket by default
+- set `DEB_S3_PRESERVE_VERSIONS=1` to keep old versions
+- set `DEB_S3_CLEAN=0` to skip the post-upload `deb-s3 clean`

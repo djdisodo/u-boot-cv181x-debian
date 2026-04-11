@@ -24,8 +24,7 @@ done
 mapfile -t debs < <(find "$artifact_dir" -maxdepth 1 -type f -name '*.deb' | sort)
 [[ ${#debs[@]} -gt 0 ]] || die "no .deb files found in $artifact_dir"
 
-args=(
-	upload
+common_args=(
 	--bucket "$DEB_S3_BUCKET"
 	--codename "${DEB_S3_CODENAME:-stable}"
 	--component "${DEB_S3_COMPONENT:-main}"
@@ -33,39 +32,45 @@ args=(
 )
 
 if [[ -n "${DEB_S3_ENDPOINT:-}" ]]; then
-	args+=(--endpoint "$DEB_S3_ENDPOINT")
+	common_args+=(--endpoint "$DEB_S3_ENDPOINT")
 fi
 
 if [[ "${DEB_S3_FORCE_PATH_STYLE:-0}" == "1" ]]; then
-	args+=(--force-path-style)
+	common_args+=(--force-path-style)
 fi
 
 if [[ -n "${DEB_S3_PREFIX:-}" ]]; then
-	args+=(--prefix "$DEB_S3_PREFIX")
+	common_args+=(--prefix "$DEB_S3_PREFIX")
 fi
 
 if [[ -n "${DEB_S3_ORIGIN:-}" ]]; then
-	args+=(--origin "$DEB_S3_ORIGIN")
+	common_args+=(--origin "$DEB_S3_ORIGIN")
 fi
 
 if [[ -n "${DEB_S3_SUITE:-}" ]]; then
-	args+=(--suite "$DEB_S3_SUITE")
+	common_args+=(--suite "$DEB_S3_SUITE")
 fi
 
 if [[ "${DEB_S3_PRESERVE_VERSIONS:-0}" == "1" ]]; then
-	args+=(--preserve-versions)
+	common_args+=(--preserve-versions)
 fi
 
 if [[ "${DEB_S3_LOCK:-1}" == "1" ]]; then
-	args+=(--lock)
+	common_args+=(--lock)
 fi
 
 if [[ "${DEB_S3_FAIL_IF_EXISTS:-0}" == "1" ]]; then
-	args+=(--fail-if-exists)
+	common_args+=(--fail-if-exists)
 fi
 
 if [[ -n "${DEB_S3_VISIBILITY:-}" ]]; then
-	args+=(--visibility "$DEB_S3_VISIBILITY")
+	common_args+=(--visibility "$DEB_S3_VISIBILITY")
 fi
 
-deb-s3 "${args[@]}" "${debs[@]}"
+upload_args=(upload "${common_args[@]}")
+deb-s3 "${upload_args[@]}" "${debs[@]}"
+
+if [[ "${DEB_S3_CLEAN:-1}" == "1" && "${DEB_S3_PRESERVE_VERSIONS:-0}" != "1" ]]; then
+	clean_args=(clean "${common_args[@]}")
+	deb-s3 "${clean_args[@]}"
+fi
