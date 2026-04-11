@@ -1,19 +1,21 @@
 This repository intentionally keeps only the Debian packaging recipe.
 
 The intended unpack/import step is handled by `gbp import-orig`, using the
-configuration in `debian/gbp.conf`. The upstream tarballs are fetched via
-`uscan` and imported into a disposable Git clone as a normal Debian source
-tree.
+configuration in `debian/gbp.conf`. CI regenerates the `latest`,
+`upstream/latest`, and `pristine-tar` branches from the recipe-only
+`latest-recipe` branch, overlaying the full recipe branch on top of the
+imported upstream tree.
 
 Typical flow:
 
-  cd /root/uboot
-  gbp clone --debian-branch=debian/latest --upstream-branch=upstream/latest \
-    ./new_recipe build/u-boot-sg2002-milkv-duo256m-distroboot-gbp
-  cd build/u-boot-sg2002-milkv-duo256m-distroboot-gbp
+  cd /root/uboot/new_recipe
+  git fetch github latest upstream/latest pristine-tar --tags || true
+  git worktree add ../latest-build github/latest-recipe
+  cd ../latest-build
   version=$(dpkg-parsechangelog --show-field Version | sed 's/-[^-]*$//')
   uscan --check-dirname-level 0 --download-current-version --rename --destdir ..
-  gbp import-orig --no-interactive --upstream-version "$version" \
+  gbp import-orig --no-interactive --debian-branch=latest \
+    --upstream-branch=upstream/latest --upstream-version "$version" \
     ../u-boot-sg2002-milkv-duo256m-distroboot_${version}.orig.tar.xz
 
 Build a source package:

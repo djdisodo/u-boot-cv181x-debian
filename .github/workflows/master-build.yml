@@ -1,0 +1,69 @@
+name: master-build
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      SBUILD_MIRROR: http://deb.debian.org/debian
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install host tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            debootstrap \
+            devscripts \
+            git-buildpackage \
+            mmdebstrap \
+            pristine-tar \
+            sbuild
+
+      - name: Enable user namespaces for unshare builds
+        run: sudo sysctl -w kernel.unprivileged_userns_clone=1
+
+      - name: Generate buildable source tree
+        id: generate
+        run: |
+          ./ci/generate-gbp-repo.sh \
+            --source-branch master \
+            --generated-branch ci/master-build \
+            --workspace "${RUNNER_TEMP}/ci-master-build" \
+            --remote origin \
+            --output-file "$GITHUB_OUTPUT"
+
+      - name: Build source package
+        id: source
+        run: |
+          ./ci/build-source-package.sh \
+            --workspace "${{ steps.generate.outputs.workspace }}" \
+            --output-file "$GITHUB_OUTPUT"
+
+      - name: Build in sbuild
+        id: sbuild
+        run: |
+          ./ci/run-sbuild.sh \
+            --workspace "${{ steps.generate.outputs.workspace }}" \
+            --dsc "${{ steps.source.outputs.dsc }}" \
+            --artifact-dir "${RUNNER_TEMP}/artifacts" \
+            --output-file "$GITHUB_OUTPUT"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: master-${{ github.sha }}
+          path: ${{ runner.temp }}/artifacts/
+          if-no-files-found: error
