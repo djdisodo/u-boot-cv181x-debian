@@ -164,7 +164,7 @@ for file in \
 	"${build_dir}/${source_pkg}_${full_version}"*.buildinfo \
 	"${build_dir}"/**/"${source_pkg}_${full_version}"*.build; do
 	if [[ -f "$file" ]]; then
-		cp -a "$file" "$artifact_dir"/
+		copy_artifact_file "$artifact_dir" "$file"
 	fi
 done
 

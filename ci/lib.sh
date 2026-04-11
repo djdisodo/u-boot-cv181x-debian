@@ -109,7 +109,26 @@ copy_if_exists() {
 
 	for file in "$@"; do
 		if [[ -f "$file" ]]; then
-			cp -a "$file" "$output_dir"/
+			copy_artifact_file "$output_dir" "$file"
 		fi
 	done
+}
+
+safe_artifact_name() {
+	local name="$1"
+
+	name=${name//$'\r'/_}
+	name=${name//$'\n'/_}
+	printf '%s\n' "$name" | sed 's/["*:<>|?]/_/g'
+}
+
+copy_artifact_file() {
+	local output_dir="$1"
+	local file="$2"
+	local dest_name=""
+	local dest_path=""
+
+	dest_name=$(safe_artifact_name "$(basename -- "$file")")
+	dest_path="${output_dir}/${dest_name}"
+	cp -L --preserve=mode,timestamps "$file" "$dest_path"
 }
