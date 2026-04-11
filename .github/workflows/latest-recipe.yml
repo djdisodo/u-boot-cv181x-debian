@@ -20,6 +20,8 @@ jobs:
       DEB_S3_CODENAME: ${{ vars.DEB_S3_CODENAME }}
       DEB_S3_COMPONENT: ${{ vars.DEB_S3_COMPONENT }}
       DEB_S3_REGION: ${{ vars.DEB_S3_REGION }}
+      DEB_S3_ENDPOINT: ${{ vars.DEB_S3_ENDPOINT }}
+      DEB_S3_FORCE_PATH_STYLE: ${{ vars.DEB_S3_FORCE_PATH_STYLE }}
       DEB_S3_ORIGIN: ${{ vars.DEB_S3_ORIGIN }}
       DEB_S3_SUITE: ${{ vars.DEB_S3_SUITE }}
       DEB_S3_PRESERVE_VERSIONS: ${{ vars.DEB_S3_PRESERVE_VERSIONS }}

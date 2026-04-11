@@ -32,6 +32,14 @@ args=(
 	--s3-region "${DEB_S3_REGION:-us-east-1}"
 )
 
+if [[ -n "${DEB_S3_ENDPOINT:-}" ]]; then
+	args+=(--endpoint "$DEB_S3_ENDPOINT")
+fi
+
+if [[ "${DEB_S3_FORCE_PATH_STYLE:-0}" == "1" ]]; then
+	args+=(--force-path-style)
+fi
+
 if [[ -n "${DEB_S3_PREFIX:-}" ]]; then
 	args+=(--prefix "$DEB_S3_PREFIX")
 fi
