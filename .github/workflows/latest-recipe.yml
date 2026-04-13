@@ -113,7 +113,7 @@ jobs:
             --remote origin
 
       - name: Publish to deb-s3
-        if: ${{ vars.DEB_S3_BUCKET != '' && secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
+        if: ${{ env.DEB_S3_BUCKET != '' && env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' }}
         run: |
           ./ci/publish-deb-s3.sh \
             --artifact-dir "${{ steps.sbuild.outputs.artifact_dir }}"
