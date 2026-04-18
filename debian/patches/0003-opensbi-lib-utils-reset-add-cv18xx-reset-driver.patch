@@ -4,16 +4,17 @@ Date: Sat, 11 Apr 2026 22:30:00 +0900
 Subject: [PATCH] opensbi: lib: utils: reset: add CV18xx reset driver
 
 SG2002 and related CV18xx parts cannot reboot through a plain syscon reset
-write. They require a board-specific RTCSYS sequence, matching the upstream
-Linux cv18xx reset flow.
+write. They require a board-specific RTCSYS sequence. Drive that sequence
+through direct MMIO writes because OpenSBI's syscon regmap rejects the
+byte-granular RTCSYS offsets this block uses.
 
 Signed-off-by: OBS Packaging Maintainer <maintainer@example.com>
 ---
  opensbi/lib/utils/reset/Kconfig             |  5 ++
- opensbi/lib/utils/reset/fdt_reset_cv18xx.c | 86 +++++++++++++++++++++++++++++
+ opensbi/lib/utils/reset/fdt_reset_cv18xx.c | 113 ++++++++++++++++++++++++++++++++++++++
  opensbi/lib/utils/reset/objects.mk         |  3 +
  opensbi/platform/generic/configs/defconfig |  1 +
- 4 files changed, 95 insertions(+)
+ 4 files changed, 122 insertions(+)
  create mode 100644 opensbi/lib/utils/reset/fdt_reset_cv18xx.c
 
 diff --git a/opensbi/lib/utils/reset/Kconfig b/opensbi/lib/utils/reset/Kconfig
@@ -34,10 +35,10 @@ index ff3f88d..b8f87ea 100644
  	select SYS_HTIF
 diff --git a/opensbi/lib/utils/reset/fdt_reset_cv18xx.c b/opensbi/lib/utils/reset/fdt_reset_cv18xx.c
 new file mode 100644
-index 0000000..9345735
+index 0000000..4d1cbf8
 --- /dev/null
 +++ b/opensbi/lib/utils/reset/fdt_reset_cv18xx.c
-@@ -0,0 +1,86 @@
+@@ -0,0 +1,113 @@
 +/*
 + * SPDX-License-Identifier: BSD-2-Clause
 + *
@@ -45,24 +46,23 @@ index 0000000..9345735
 + */
 +
 +#include <libfdt.h>
++#include <sbi/riscv_io.h>
 +#include <sbi/sbi_bitops.h>
 +#include <sbi/sbi_ecall_interface.h>
 +#include <sbi/sbi_error.h>
 +#include <sbi/sbi_hart.h>
 +#include <sbi/sbi_system.h>
 +#include <sbi_utils/fdt/fdt_driver.h>
-+#include <sbi_utils/regmap/fdt_regmap.h>
-+#include <sbi_utils/regmap/regmap.h>
++#include <sbi_utils/fdt/fdt_helper.h>
 +
 +#define RTC_CTRL_UNLOCKKEY	0x04
 +#define RTC_CTRL0		0x08
 +#define REQ_PWR_CYC		BIT(3)
-+#define REQ_WARM_RST		BIT(4)
 +
-+#define RTC_EN_PWR_CYC_REQ	0x10C8
-+#define RTC_EN_WARM_RST_REQ	0x10CC
++#define RTC_EN_PWR_CYC_REQ	0xC8
 +
-+static struct regmap *rtcsys_regs;
++static unsigned long rtcsys_ctrl_addr;
++static unsigned long rtcsys_core_addr;
 +
 +static int cv18xx_reset_check(u32 type, u32 reason)
 +{
@@ -77,17 +77,20 @@ index 0000000..9345735
 +
 +static void cv18xx_reset(u32 type, u32 reason)
 +{
-+	u32 reg_en = RTC_EN_WARM_RST_REQ;
-+	u32 request = REQ_WARM_RST;
++	(void)type;
++	(void)reason;
 +
-+	if (type == SBI_SRST_RESET_TYPE_COLD_REBOOT) {
-+		reg_en = RTC_EN_PWR_CYC_REQ;
-+		request = REQ_PWR_CYC;
-+	}
++	/*
++	 * SG2002 reboot is only verified on the power-cycle request path,
++	 * so map every SBI reboot request to that sequence.
++	 */
++	writel(1, (void *)(rtcsys_core_addr + RTC_EN_PWR_CYC_REQ));
++	writel(0xAB18, (void *)(rtcsys_ctrl_addr + RTC_CTRL_UNLOCKKEY));
++	writel(0xFFFF0800 | REQ_PWR_CYC,
++	       (void *)(rtcsys_ctrl_addr + RTC_CTRL0));
 +
-+	regmap_write(rtcsys_regs, reg_en, 1);
-+	regmap_write(rtcsys_regs, RTC_CTRL_UNLOCKKEY, 0xAB18);
-+	regmap_write(rtcsys_regs, RTC_CTRL0, 0xFFFF0800 | request);
++	/* Flush the posted write before parking the hart. */
++	readl((void *)(rtcsys_ctrl_addr + RTC_CTRL0));
 +
 +	sbi_hart_hang();
 +}
@@ -98,16 +101,41 @@ index 0000000..9345735
 +	.system_reset = cv18xx_reset,
 +};
 +
++static int cv18xx_get_addr(const void *fdt, int nodeoff,
++			   const char *prop, unsigned long *out_addr)
++{
++	int len, rc, target;
++	uint64_t addr;
++	const fdt32_t *val;
++
++	val = fdt_getprop(fdt, nodeoff, prop, &len);
++	if (!val || len < 4)
++		return SBI_EINVAL;
++
++	target = fdt_node_offset_by_phandle(fdt, fdt32_to_cpu(*val));
++	if (target < 0)
++		return SBI_EINVAL;
++
++	rc = fdt_get_node_addr_size(fdt, target, 0, &addr, NULL);
++	if (rc)
++		return rc;
++
++	*out_addr = addr;
++	return 0;
++}
++
 +static int cv18xx_reset_init(const void *fdt, int nodeoff,
 +			     const struct fdt_match *match)
 +{
-+	int len, rc;
-+	const fdt32_t *val;
++	int rc;
 +
-+	val = fdt_getprop(fdt, nodeoff, "sophgo,rtcsys", &len);
-+	if (!val || len < 4)
-+		return SBI_EINVAL;
-+	rc = fdt_regmap_get_by_phandle(fdt, fdt32_to_cpu(*val), &rtcsys_regs);
++	rc = cv18xx_get_addr(fdt, nodeoff, "sophgo,rtcsys-ctrl",
++			     &rtcsys_ctrl_addr);
++	if (rc)
++		return rc;
++
++	rc = cv18xx_get_addr(fdt, nodeoff, "sophgo,rtcsys-core",
++			     &rtcsys_core_addr);
 +	if (rc)
 +		return rc;
 +

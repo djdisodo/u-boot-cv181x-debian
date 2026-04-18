@@ -1,0 +1,58 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OBS Packaging Maintainer <maintainer@example.com>
+Date: Sat, 18 Apr 2026 14:20:00 +0900
+Subject: [PATCH] opensbi: platform: generic: force single firmware region on
+ SG2002
+
+SG2002 only exposes eight PMP entries. When the CV18xx reset driver maps the
+RTCSYS syscon into the root domain, the generic platform's default split
+firmware layout consumes one PMP entry too many and boot aborts before
+U-Boot starts.
+
+Set the generic platform's single-firmware-region hook directly from
+fw_platform_init() when the root device tree is compatible with
+"sophgo,sg2002". This ensures the quirk is active before root domain PMP
+regions are finalized, without depending on a separate platform override
+module.
+
+Signed-off-by: OBS Packaging Maintainer <maintainer@example.com>
+---
+ opensbi/platform/generic/platform.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/opensbi/platform/generic/platform.c b/opensbi/platform/generic/platform.c
+index a24c17e..39534d5 100644
+--- a/opensbi/platform/generic/platform.c
++++ b/opensbi/platform/generic/platform.c
+@@ -68,6 +68,11 @@ static u32 generic_hart_index2id[SBI_HARTMASK_MAX_BITS] = { 0 };
+ 
+ static DECLARE_BITMAP(generic_coldboot_harts, SBI_HARTMASK_MAX_BITS);
+ 
++static bool sophgo_sg2002_single_fw_region(void)
++{
++	return true;
++}
++
+ /*
+  * The fw_platform_coldboot_harts_init() function is called by fw_platform_init()
+  * function to initialize the cold boot harts allowed by the generic platform
+@@ -153,8 +158,17 @@ unsigned long fw_platform_init(unsigned long arg0, unsigned long arg1,
+ 	if (root_offset < 0)
+ 		goto fail;
+ 
++	/*
++	 * SG2002 only has eight PMP entries. Keep OpenSBI firmware in a
++	 * single PMP region so the RTCSYS syscon used by the CV18xx reset
++	 * driver still fits in the root domain PMP layout.
++	 */
++	if (!fdt_node_check_compatible(fdt, root_offset, "sophgo,sg2002"))
++		generic_platform_ops.single_fw_region =
++			sophgo_sg2002_single_fw_region;
++
+ 	fdt_driver_init_by_offset(fdt, root_offset, platform_override_modules);
+ 
+ 	model = fdt_getprop(fdt, root_offset, "model", &len);
+ 	if (model)
+ 		sbi_strncpy(platform.name, model, sizeof(platform.name) - 1);
+-- 
+2.50.0

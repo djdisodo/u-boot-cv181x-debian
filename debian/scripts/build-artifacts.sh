@@ -156,6 +156,7 @@ PACKAGE_RELEASE=$package_release
 BOARD_NAME=$board_name
 BOARD_DEFCONFIG=$board_defconfig
 INSTALL_DIR=$install_dir
+FIP_INSTALL_PATH=/boot/fip.bin
 U_BOOT_URL=https://github.com/u-boot/u-boot.git
 U_BOOT_REF=v$u_boot_version
 OPENSBI_URL=https://github.com/riscv-software-src/opensbi.git

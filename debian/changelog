@@ -1,7 +1,55 @@
-u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-1) unstable; urgency=medium
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-8) unstable; urgency=medium
+
+  * OpenSBI: bypass the broken syscon regmap path for Duo 256M RTCSYS reboot
+    writes and drive the verified power-cycle reset sequence through direct
+    MMIO.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sun, 19 Apr 2026 00:10:00 +0900
+
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-7) unstable; urgency=medium
+
+  * OpenSBI: split the Duo 256M RTCSYS reboot wiring into ctrl/core syscon
+    phandles and use the correct RTCSYS core enable offsets.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sat, 18 Apr 2026 16:05:00 +0900
+
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-6) unstable; urgency=medium
+
+  * OpenSBI: move the SG2002 single-firmware-region quirk into generic
+    fw_platform_init() so it is active before root-domain PMP layout is
+    finalized.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sat, 18 Apr 2026 14:25:00 +0900
+
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-5) unstable; urgency=medium
+
+  * OpenSBI: add an SG2002 generic platform override that keeps firmware in a
+    single PMP region.
+  * Re-enable the Duo 256M RTCSYS reset node now that the reset syscon fits
+    within the board's 8 PMP entries.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sat, 18 Apr 2026 13:45:00 +0900
+
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-4) unstable; urgency=medium
+
+  * Drop the OpenSBI RTCSYS reset node for Duo 256M. The extra syscon MMIO
+    regions exhaust the board's 8 PMP entries and break boot before U-Boot.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sat, 18 Apr 2026 12:30:00 +0900
+
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-3) unstable; urgency=medium
+
+  * Install fip.bin directly into /boot for image assembly.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sat, 18 Apr 2026 11:50:00 +0900
+
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-2) unstable; urgency=medium
 
   * Initial Debian packaging for the Milk-V Duo 256M distroboot firmware.
   * Build U-Boot from upstream sources and OpenSBI from source.
   * Assemble fip.bin with the local FSBL, DDR parameter block, and RTOS blobs.
+  * Set the board's default fdtfile for extlinux fdtdir boot.
+  * Install a board-specific u-boot-menu fragment for DTB syncing and overlay
+    handling.
 
  -- Packaging Maintainer <maintainer@example.com>  Sun, 12 Apr 2026 00:06:00 +0900

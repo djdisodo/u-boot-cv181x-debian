@@ -3,8 +3,7 @@
  * OpenSBI DT for the Milk-V Duo 256M.
  *
  * Base SoC content comes from upstream Linux DTS sources vendored under
- * board/kernel-upstream. The reset nodes below are carried locally until
- * the upstream kernel reset binding lands.
+ * board/kernel-upstream.
  */
 
 /dts-v1/;
@@ -31,9 +30,20 @@
 		stdout-path = "serial0:115200n8";
 	};
 
-	soc-reset {
+	rtcsys_ctrl: syscon@5025000 {
+		compatible = "sophgo,cv1800-rtcsys-ctrl", "syscon";
+		reg = <0x05025000 0x1000>;
+	};
+
+	rtcsys_core: syscon@5026000 {
+		compatible = "sophgo,cv1800-rtcsys-core", "syscon";
+		reg = <0x05026000 0x1000>;
+	};
+
+	reboot {
 		compatible = "sophgo,cv1800-reset";
-		sophgo,rtcsys = <&rtc>;
+		sophgo,rtcsys-ctrl = <&rtcsys_ctrl>;
+		sophgo,rtcsys-core = <&rtcsys_core>;
 	};
 };
 

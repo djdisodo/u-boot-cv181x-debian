@@ -6,6 +6,10 @@ on:
       - latest-recipe
   workflow_dispatch:
 
+concurrency:
+  group: latest-recipe-publish
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -22,6 +26,7 @@ jobs:
       DEB_S3_REGION: ${{ vars.DEB_S3_REGION }}
       DEB_S3_ENDPOINT: ${{ vars.DEB_S3_ENDPOINT }}
       DEB_S3_FORCE_PATH_STYLE: ${{ vars.DEB_S3_FORCE_PATH_STYLE }}
+      DEB_S3_SIGN_KEY: ${{ vars.DEB_S3_SIGN_KEY }}
       DEB_S3_CLEAN: ${{ vars.DEB_S3_CLEAN }}
       DEB_S3_ORIGIN: ${{ vars.DEB_S3_ORIGIN }}
       DEB_S3_SUITE: ${{ vars.DEB_S3_SUITE }}
@@ -29,6 +34,8 @@ jobs:
       DEB_S3_LOCK: ${{ vars.DEB_S3_LOCK }}
       DEB_S3_FAIL_IF_EXISTS: ${{ vars.DEB_S3_FAIL_IF_EXISTS }}
       DEB_S3_VISIBILITY: ${{ vars.DEB_S3_VISIBILITY }}
+      DEB_REPO_SIGNING_PRIVATE_KEY: ${{ secrets.DEB_REPO_SIGNING_PRIVATE_KEY }}
+      DEB_REPO_SIGNING_PASSPHRASE: ${{ secrets.DEB_REPO_SIGNING_PASSPHRASE }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
@@ -45,6 +52,7 @@ jobs:
             curl \
             debootstrap \
             devscripts \
+            gnupg \
             git-buildpackage \
             mmdebstrap \
             pristine-tar \
@@ -97,6 +105,14 @@ jobs:
             --artifact-dir "${RUNNER_TEMP}/artifacts" \
             --output-file "$GITHUB_OUTPUT"
 
+      - name: Prepare repository signing key
+        if: ${{ env.DEB_REPO_SIGNING_PRIVATE_KEY != '' }}
+        run: |
+          ./ci/setup-repo-signing.sh \
+            --env-file "$GITHUB_ENV" \
+            --home "${RUNNER_TEMP}/deb-repo-signing" \
+            --public-key-dir "${RUNNER_TEMP}/artifacts/repository-signing-key"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -113,7 +129,7 @@ jobs:
             --remote origin
 
       - name: Publish to deb-s3
-        if: ${{ vars.DEB_S3_BUCKET != '' && secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
+        if: ${{ env.DEB_S3_BUCKET != '' && env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' }}
         run: |
           ./ci/publish-deb-s3.sh \
             --artifact-dir "${{ steps.sbuild.outputs.artifact_dir }}"

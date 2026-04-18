@@ -1,3 +1,4 @@
 0001-riscv-sophgo-add-sg2002-duo256m-distroboot.patch
 0002-riscv-sophgo-set-overlay-addr-in-default-env.patch
 0003-opensbi-lib-utils-reset-add-cv18xx-reset-driver.patch
+0004-opensbi-platform-generic-force-single-fw-region-on-sg2002.patch

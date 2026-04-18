@@ -31,3 +31,8 @@ Patches are stored in `debian/patches` because the source format is
 imported source tree with:
 
   dpkg-source --commit
+
+The binary package also installs a board-specific `u-boot-menu` fragment under
+`/usr/share/u-boot-menu/conf.d/` so Debian's extlinux generation uses generic
+kernel `fdtdir` entries while U-Boot selects the board DTB via its `fdtfile`
+environment variable.

@@ -3,6 +3,12 @@
 `new_recipe/` is a packaging-only Git repository for the Milk-V Duo 256M
 U-Boot/OpenSBI firmware package.
 
+The package installs `fip.bin` directly under `/boot/`, keeps the remaining
+firmware artifacts under `/usr/lib/u-boot/sg2002-milkv-duo256m/`, installs a
+board-specific `u-boot-menu` fragment, and sets U-Boot's default `fdtfile` so
+Debian extlinux entries can use generic `fdtdir` selection while still
+resolving to the correct board DTB.
+
 **Branch model**
 
 - `master`: recipe-only branch. CI builds artifacts only.
@@ -43,9 +49,16 @@ with `dpkg-source --commit`.
 - `DEB_S3_CODENAME`, `DEB_S3_COMPONENT`, `DEB_S3_REGION`, `DEB_S3_ENDPOINT`,
   `DEB_S3_FORCE_PATH_STYLE`, `DEB_S3_PREFIX`, `DEB_S3_ORIGIN`, `DEB_S3_SUITE`,
   `DEB_S3_CLEAN`, `DEB_S3_PRESERVE_VERSIONS`, `DEB_S3_LOCK`, `DEB_S3_FAIL_IF_EXISTS`,
-  `DEB_S3_VISIBILITY` repo variables: optional publish controls.
+  `DEB_S3_USE_SESSION_TOKEN`, `DEB_S3_VISIBILITY`, `DEB_S3_SIGN_KEY` repo
+  variables: optional publish controls. Set `DEB_S3_SIGN_KEY` to a full
+  fingerprint or key ID to make `deb-s3` sign both `InRelease` and
+  `Release.gpg`.
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` secrets:
   used by `deb-s3`.
+- `DEB_REPO_SIGNING_PRIVATE_KEY` secret: optional ASCII-armored or base64
+  encoded private OpenPGP key for repository signing.
+- `DEB_REPO_SIGNING_PASSPHRASE` secret: optional passphrase for the private
+  key. CI passes it to `gpg` through a temporary file with loopback pinentry.
 
 For Cloudflare R2, set for example:
 
@@ -54,6 +67,29 @@ For Cloudflare R2, set for example:
 - `DEB_S3_REGION=auto`
 - `DEB_S3_ENDPOINT=https://<account_id>.r2.cloudflarestorage.com`
 - `DEB_S3_FORCE_PATH_STYLE=0`
+
+To create a dedicated repository signing key locally:
+
+```sh
+gpg --quick-gen-key 'Sodo Repo Signing <repo@example.com>' ed25519 sign 2y
+key_id=$(gpg --list-secret-keys --with-colons 'Sodo Repo Signing <repo@example.com>' | awk -F: '/^fpr:/ { print $10; exit }')
+gpg --armor --export-secret-keys "$key_id" > repository-signing-private.asc
+gpg --armor --export "$key_id" > repository-signing-key.asc
+gpg --export "$key_id" > repository-signing-key.gpg
+```
+
+Then configure GitHub as follows:
+
+- repo variable `DEB_S3_SIGN_KEY`: set it to the fingerprint in `key_id`, or
+  leave it unset and let CI use the first imported secret key.
+- repo secret `DEB_REPO_SIGNING_PRIVATE_KEY`: paste the contents of
+  `repository-signing-private.asc`.
+- repo secret `DEB_REPO_SIGNING_PASSPHRASE`: set it only if the private key is
+  passphrase protected.
+
+When signing is enabled, the `latest-recipe` workflow also exports
+`repository-signing-key.asc` and `repository-signing-key.gpg` into the uploaded
+build artifact so clients can install the public key.
 
 `ci/run-sbuild.sh` will refresh the Debian archive keyring from the official
 Debian package pool when bootstrapping a Debian mirror, and you can override
@@ -66,3 +102,16 @@ Publish defaults:
 - dangling old `.deb` objects are cleaned from the bucket by default
 - set `DEB_S3_PRESERVE_VERSIONS=1` to keep old versions
 - set `DEB_S3_CLEAN=0` to skip the post-upload `deb-s3 clean`
+
+When using a custom S3 endpoint such as Cloudflare R2:
+
+- `ci/publish-deb-s3.sh` defaults to `--visibility nil` unless you explicitly
+  set `DEB_S3_VISIBILITY`, because R2 does not support S3 ACL headers.
+- `ci/publish-deb-s3.sh` skips `deb-s3 --lock` by default unless you explicitly
+  set `DEB_S3_LOCK=1`, because `deb-s3`'s lock protocol is not consistently
+  supported by S3-compatible providers.
+- `ci/publish-deb-s3.sh` unsets `AWS_SESSION_TOKEN` by default for custom
+  endpoints, because providers such as R2 usually expect only access key and
+  secret key. Set `DEB_S3_USE_SESSION_TOKEN=1` only if your endpoint requires it.
+- `.github/workflows/latest-recipe.yml` uses workflow `concurrency` so publish
+  jobs still run one at a time.
