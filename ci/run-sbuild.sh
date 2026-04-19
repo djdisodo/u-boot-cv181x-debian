@@ -207,12 +207,14 @@ copy_if_exists "$artifact_dir" \
 	"${parent_dir}/${source_pkg}_${upstream_version}.orig-opensbi.tar.xz"
 
 for file in \
-	"${parent_dir}/${source_pkg}_${full_version}"*.deb \
-	"${parent_dir}/${source_pkg}_${full_version}"*.udeb \
+	"${parent_dir}"/*_"${full_version}"_*.deb \
+	"${parent_dir}"/*_"${full_version}"_*.udeb \
 	"${parent_dir}/${source_pkg}_${full_version}"*.changes \
 	"${parent_dir}/${source_pkg}_${full_version}"*.buildinfo \
-	"${build_dir}/${source_pkg}_${full_version}"*.deb \
-	"${build_dir}/${source_pkg}_${full_version}"*.udeb \
+	"${build_dir}"/*_"${full_version}"_*.deb \
+	"${build_dir}"/*_"${full_version}"_*.udeb \
+	"${build_dir}"/**/*_"${full_version}"_*.deb \
+	"${build_dir}"/**/*_"${full_version}"_*.udeb \
 	"${build_dir}/${source_pkg}_${full_version}"*.changes \
 	"${build_dir}/${source_pkg}_${full_version}"*.buildinfo \
 	"${build_dir}"/**/"${source_pkg}_${full_version}"*.build; do
