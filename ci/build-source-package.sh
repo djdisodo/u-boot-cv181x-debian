@@ -26,7 +26,6 @@ done
 [[ -n "$workspace" ]] || die "--workspace is required"
 
 cd "$workspace"
-debian/rules clean || true
 dpkg-source -b .
 
 source_pkg=$(package_source_name)

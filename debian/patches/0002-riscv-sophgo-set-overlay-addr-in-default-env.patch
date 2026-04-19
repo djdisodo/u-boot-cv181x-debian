@@ -4,7 +4,7 @@ Forwarded: not-yet
 
 --- a/configs/sg2002_milkv_duo256m_defconfig
 +++ b/configs/sg2002_milkv_duo256m_defconfig
-@@ -6,16 +6,15 @@
+@@ -6,6 +6,7 @@
  CONFIG_CUSTOM_SYS_INIT_SP_ADDR=0x82300000
  CONFIG_DEFAULT_DEVICE_TREE="sg2002-milkv-duo256m"
  CONFIG_SYS_LOAD_ADDR=0x80080000
@@ -12,8 +12,7 @@ Forwarded: not-yet
  CONFIG_IDENT_STRING="sg2002_milkv_duo256m"
  CONFIG_TARGET_LICHEERV_NANO=y
  CONFIG_ARCH_RV64I=y
- CONFIG_RISCV_SMODE=y
- CONFIG_FIT=y
+@@ -14,8 +15,6 @@
  CONFIG_BOOTSTD_FULL=y
  # CONFIG_BOOTMETH_EFI_BOOTMGR is not set
  CONFIG_SD_BOOT=y
@@ -32,16 +31,14 @@ Forwarded: not-yet
  CONFIG_IDENT_STRING="licheerv_nano"
  CONFIG_TARGET_LICHEERV_NANO=y
  CONFIG_ARCH_RV64I=y
-@@ -40,3 +41,4 @@
- CONFIG_SPI=y
+@@ -45,3 +46,4 @@
  CONFIG_CV1800B_SPIF=y
  CONFIG_SYSRESET=y
+ CONFIG_SYSRESET_CV1800B=y
 +CONFIG_OF_LIBFDT_OVERLAY=y
 --- a/include/configs/licheerv_nano.h
 +++ b/include/configs/licheerv_nano.h
 @@ -14,10 +14,17 @@
- #define BOOT_TARGET_DEVICES(func) \
- 	func(MMC, mmc, 0)
  
  #define CFG_SYS_SDRAM_BASE         0x80000000
  

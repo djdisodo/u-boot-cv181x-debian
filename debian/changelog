@@ -1,3 +1,11 @@
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-10) unstable; urgency=medium
+
+  * Refresh the Nano/Duo default-FDT patch against current upstream so
+    dpkg-source can apply it without fuzz in CI.
+  * Build the source package directly in CI without calling dh clean first.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sat, 19 Apr 2026 20:05:00 +0900
+
 u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-9) unstable; urgency=medium
 
   * Add a separate Sipeed LicheeRV Nano distroboot package.
