@@ -1,0 +1,6 @@
+debian/build/out/sg2002-licheerv-nano/fip.bin boot/
+debian/build/out/sg2002-licheerv-nano/fw_dynamic.bin usr/lib/u-boot/sg2002-licheerv-nano/
+debian/build/out/sg2002-licheerv-nano/sg2002-licheerv-nano-opensbi.dtb usr/lib/u-boot/sg2002-licheerv-nano/
+debian/build/out/sg2002-licheerv-nano/u-boot.bin usr/lib/u-boot/sg2002-licheerv-nano/
+debian/build/out/sg2002-licheerv-nano/build.env usr/lib/u-boot/sg2002-licheerv-nano/
+debian/u-boot-menu-sg2002-licheerv-nano.conf usr/share/u-boot-menu/conf.d/

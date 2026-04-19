@@ -1,13 +1,19 @@
 # Recipe-only Debian packaging
 
-`new_recipe/` is a packaging-only Git repository for the Milk-V Duo 256M
-U-Boot/OpenSBI firmware package.
+`new_recipe/` is a packaging-only Git repository for SG2002
+U-Boot/OpenSBI distroboot firmware packages.
 
-The package installs `fip.bin` directly under `/boot/`, keeps the remaining
-firmware artifacts under `/usr/lib/u-boot/sg2002-milkv-duo256m/`, installs a
-board-specific `u-boot-menu` fragment, and sets U-Boot's default `fdtfile` so
-Debian extlinux entries can use generic `fdtdir` selection while still
-resolving to the correct board DTB.
+The source package currently builds:
+
+- `u-boot-sg2002-milkv-duo256m-distroboot`
+- `u-boot-sg2002-licheerv-nano-distroboot`
+
+Each binary package installs its own board-specific `fip.bin` directly under
+`/boot/`, keeps the remaining firmware artifacts under
+`/usr/lib/u-boot/<board>/`, installs a board-specific `u-boot-menu` fragment,
+and sets U-Boot's default `fdtfile` in the matching defconfig so Debian
+extlinux entries can use generic `fdtdir` selection while still resolving to
+the correct board DTB.
 
 **Branch model**
 

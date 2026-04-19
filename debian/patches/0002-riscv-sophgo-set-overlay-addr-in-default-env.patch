@@ -4,7 +4,16 @@ Forwarded: not-yet
 
 --- a/configs/sg2002_milkv_duo256m_defconfig
 +++ b/configs/sg2002_milkv_duo256m_defconfig
-@@ -14,8 +14,6 @@
+@@ -6,16 +6,15 @@
+ CONFIG_CUSTOM_SYS_INIT_SP_ADDR=0x82300000
+ CONFIG_DEFAULT_DEVICE_TREE="sg2002-milkv-duo256m"
+ CONFIG_SYS_LOAD_ADDR=0x80080000
++CONFIG_DEFAULT_FDT_FILE="dts/sophgo/sg2002-milkv-duo256m.dtb"
+ CONFIG_IDENT_STRING="sg2002_milkv_duo256m"
+ CONFIG_TARGET_LICHEERV_NANO=y
+ CONFIG_ARCH_RV64I=y
+ CONFIG_RISCV_SMODE=y
+ CONFIG_FIT=y
  CONFIG_BOOTSTD_FULL=y
  # CONFIG_BOOTMETH_EFI_BOOTMGR is not set
  CONFIG_SD_BOOT=y
@@ -13,14 +22,38 @@ Forwarded: not-yet
  CONFIG_BOOTCOMMAND="run distro_bootcmd"
  CONFIG_SYS_CBSIZE=512
  CONFIG_SYS_PBSIZE=544
+--- a/configs/sipeed_licheerv_nano_defconfig
++++ b/configs/sipeed_licheerv_nano_defconfig
+@@ -6,6 +6,7 @@
+ CONFIG_CUSTOM_SYS_INIT_SP_ADDR=0x82300000
+ CONFIG_DEFAULT_DEVICE_TREE="sg2002-licheerv-nano-b"
+ CONFIG_SYS_LOAD_ADDR=0x80080000
++CONFIG_DEFAULT_FDT_FILE="dts/sophgo/sg2002-licheerv-nano-b.dtb"
+ CONFIG_IDENT_STRING="licheerv_nano"
+ CONFIG_TARGET_LICHEERV_NANO=y
+ CONFIG_ARCH_RV64I=y
+@@ -40,3 +41,4 @@
+ CONFIG_SPI=y
+ CONFIG_CV1800B_SPIF=y
+ CONFIG_SYSRESET=y
++CONFIG_OF_LIBFDT_OVERLAY=y
 --- a/include/configs/licheerv_nano.h
 +++ b/include/configs/licheerv_nano.h
-@@ -17,7 +17,10 @@
+@@ -14,10 +14,17 @@
+ #define BOOT_TARGET_DEVICES(func) \
+ 	func(MMC, mmc, 0)
+ 
+ #define CFG_SYS_SDRAM_BASE         0x80000000
+ 
++#ifndef CONFIG_DEFAULT_FDT_FILE
++#define CONFIG_DEFAULT_FDT_FILE CONFIG_DEFAULT_DEVICE_TREE ".dtb"
++#endif
++
  #define CFG_EXTRA_ENV_SETTINGS  "consoledev=ttyS0\0" \
  								"baudrate=115200\0" \
  								"fdt_addr_r=0x82000000\0" \
 +								"fdtoverlay_addr_r=0x84000000\0" \
-+								"fdtfile=dts/sophgo/sg2002-milkv-duo256m.dtb\0" \
++								"fdtfile=" CONFIG_DEFAULT_FDT_FILE "\0" \
  								"kernel_addr_r=0x81000000\0" \
 +								"ramdisk_addr_r=0x85000000\0" \
  								"scriptaddr=0x80c00000\0" \

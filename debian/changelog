@@ -1,3 +1,13 @@
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-9) unstable; urgency=medium
+
+  * Add a separate Sipeed LicheeRV Nano distroboot package.
+  * Build board-specific OpenSBI DTBs and FIPs per target instead of reusing
+    the Duo 256M firmware bundle.
+  * Move the default U-Boot `fdtfile` selection into per-board defconfigs so
+    each board resolves Debian `fdtdir` boot entries to the correct DTB.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sun, 19 Apr 2026 15:10:00 +0900
+
 u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-8) unstable; urgency=medium
 
   * OpenSBI: bypass the broken syscon regmap path for Duo 256M RTCSYS reboot

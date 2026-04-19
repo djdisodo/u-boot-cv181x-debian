@@ -92,16 +92,17 @@ if [[ -z "$source_dir" || -z "$build_dir" || -z "$cross_compile" || -z "$board_n
 fi
 
 jobs="${JOBS:-$(nproc)}"
-uboot_build="$build_dir/u-boot"
-opensbi_build="$build_dir/opensbi"
+uboot_build="$build_dir/u-boot/$board_name"
+opensbi_build="$build_dir/opensbi/$board_name"
 work_out="$build_dir/out/$board_name"
 opensbi_dtb="$build_dir/${board_name}-opensbi.dtb"
 
-rm -rf "$build_dir"
+rm -rf "$uboot_build" "$opensbi_build" "$work_out" "$opensbi_dtb"
 mkdir -p "$uboot_build" "$opensbi_build" "$work_out"
 
 "$source_dir/debian/scripts/compile-opensbi-dtb.sh" \
 	--source-dir "$source_dir" \
+	--board-name "$board_name" \
 	--output "$opensbi_dtb"
 
 make -C "$source_dir/opensbi" \

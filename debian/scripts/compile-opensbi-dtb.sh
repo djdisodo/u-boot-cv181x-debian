@@ -2,12 +2,17 @@
 set -euo pipefail
 
 source_dir=""
+board_name=""
 output=""
 
 while (($#)); do
 	case "$1" in
 		--source-dir)
 			source_dir="$2"
+			shift 2
+			;;
+		--board-name)
+			board_name="$2"
 			shift 2
 			;;
 		--output)
@@ -21,8 +26,8 @@ while (($#)); do
 	esac
 done
 
-if [[ -z "$source_dir" || -z "$output" ]]; then
-	echo "usage: $0 --source-dir DIR --output FILE" >&2
+if [[ -z "$source_dir" || -z "$board_name" || -z "$output" ]]; then
+	echo "usage: $0 --source-dir DIR --board-name NAME --output FILE" >&2
 	exit 1
 fi
 
@@ -38,7 +43,7 @@ cpp -x assembler-with-cpp -undef -nostdinc -D__DTS__ \
 	-I"$board_dir" \
 	-I"$dts_dir" \
 	-I"$include_dir" \
-	"$board_dir/sg2002-milkv-duo256m-opensbi.dts" > "$tmp_dts"
+	"$board_dir/${board_name}-opensbi.dts" > "$tmp_dts"
 
 dtc -I dts -O dtb -o "$output" "$tmp_dts"
 rm -f "$tmp_dts"
