@@ -13,8 +13,8 @@ PACKAGE_RELEASE := $(shell dpkg-parsechangelog --show-field Version | sed 's/^.*
 U_BOOT_VERSION := $(shell printf '%s\n' '$(PACKAGE_VERSION)' | sed 's/+~.*$$//')
 OPENSBI_VERSION := $(shell printf '%s\n' '$(PACKAGE_VERSION)' | sed -n 's/^[^+]*+~//p')
 BOARD_TARGETS := \
-	u-boot-sg2002-milkv-duo256m-distroboot|sg2002-milkv-duo256m|sg2002_milkv_duo256m_defconfig|/usr/lib/u-boot/sg2002-milkv-duo256m \
-	u-boot-sg2002-licheerv-nano-distroboot|sg2002-licheerv-nano|sipeed_licheerv_nano_defconfig|/usr/lib/u-boot/sg2002-licheerv-nano
+	"u-boot-sg2002-milkv-duo256m-distroboot|sg2002-milkv-duo256m|sg2002_milkv_duo256m_defconfig|/usr/lib/u-boot/sg2002-milkv-duo256m" \
+	"u-boot-sg2002-licheerv-nano-distroboot|sg2002-licheerv-nano|sipeed_licheerv_nano_defconfig|/usr/lib/u-boot/sg2002-licheerv-nano"
 
 %:
 	dh $@
