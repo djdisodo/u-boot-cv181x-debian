@@ -152,9 +152,9 @@ vendor PHY ID and routing the integrated PHY LED outputs.
 +	writel(0x11111111, REG_EPHY_LED_PAD_SEL0);
 +	writel(0x11111111, REG_EPHY_LED_PAD_SEL1);
  }
---- /dev/null
+--- a/board/sophgo/licheerv_nano/ethernet.c
 +++ b/board/sophgo/licheerv_nano/ethernet.c
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,56 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * Copyright (c) 2024, Kongyang Liu <seashell11234455@gmail.com>
@@ -211,7 +211,7 @@ vendor PHY ID and routing the integrated PHY LED outputs.
 +	writel(0x11111111, REG_EPHY_LED_PAD_SEL0);
 +	writel(0x11111111, REG_EPHY_LED_PAD_SEL1);
 +}
---- /dev/null
+--- a/board/sophgo/licheerv_nano/ethernet.h
 +++ b/board/sophgo/licheerv_nano/ethernet.h
 @@ -0,0 +1,11 @@
 +/* SPDX-License-Identifier: GPL-2.0+ */
@@ -239,7 +239,6 @@ vendor PHY ID and routing the integrated PHY LED outputs.
 --- a/configs/sipeed_licheerv_nano_defconfig
 +++ b/configs/sipeed_licheerv_nano_defconfig
 @@ -17,7 +17,7 @@
- CONFIG_SD_BOOT=y
  CONFIG_BOOTCOMMAND="run distro_bootcmd"
  CONFIG_SYS_CBSIZE=512
  CONFIG_SYS_PBSIZE=544
