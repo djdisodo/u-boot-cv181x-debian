@@ -1,3 +1,12 @@
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-12) unstable; urgency=medium
+
+  * Run the SG2002 board_init() hook for both shipped board defconfigs.
+  * Initialize the internal EPHY from the LicheeRV Nano board code so the
+    upstream DTS-only Ethernet enablement has the expected pre-boot PHY
+    setup on Nano and Duo package builds.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sat, 06 Jun 2026 11:20:00 +0900
+
 u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-11) unstable; urgency=medium
 
   * Copy all version-matched binary packages out of the sbuild output
