@@ -1,3 +1,11 @@
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-13) unstable; urgency=medium
+
+  * Mirror the downstream CV18xx internal EPHY setup more closely in the
+    packaged board_init() helper by using the vendor PHY ID and LED pinmux
+    sequence for both the Duo and LicheeRV Nano board builds.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sat, 06 Jun 2026 16:10:00 +0900
+
 u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-12) unstable; urgency=medium
 
   * Run the SG2002 board_init() hook for both shipped board defconfigs.
