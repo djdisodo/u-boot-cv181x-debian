@@ -1,3 +1,15 @@
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-15) unstable; urgency=medium
+
+  * Enable U-Boot Btrfs support in the shipped SG2002 defconfigs so
+    distroboot can read extlinux.conf, kernels, DTBs, and overlays from a
+    Btrfs root filesystem.
+  * Stage board firmware under /usr/lib/u-boot/<board>/ and install
+    /boot/firmware/fip.bin from package postinst.
+  * Point u-boot-menu overlay lookups at /boot/overlays for the shared-rootfs
+    boot layout.
+
+ -- Packaging Maintainer <maintainer@example.com>  Fri, 06 Jun 2026 20:00:00 +0900
+
 u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-14) unstable; urgency=medium
 
   * Move the downstream CV18xx internal EPHY default analog tuning sequence

@@ -8,12 +8,13 @@ The source package currently builds:
 - `u-boot-sg2002-milkv-duo256m-distroboot`
 - `u-boot-sg2002-licheerv-nano-distroboot`
 
-Each binary package installs its own board-specific `fip.bin` directly under
-`/boot/`, keeps the remaining firmware artifacts under
+Each binary package stages its board-specific `fip.bin` under
+`/usr/lib/u-boot/<board>/`, copies it into `/boot/firmware/fip.bin` from
+postinst, keeps the remaining firmware artifacts under
 `/usr/lib/u-boot/<board>/`, installs a board-specific `u-boot-menu` fragment,
 and sets U-Boot's default `fdtfile` in the matching defconfig so Debian
-extlinux entries can use generic `fdtdir` selection while still resolving to
-the correct board DTB.
+extlinux entries can be loaded from a Linux root filesystem while still
+resolving to the correct board DTB.
 
 **Branch model**
 

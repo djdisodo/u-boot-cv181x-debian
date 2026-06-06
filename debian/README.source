@@ -37,4 +37,6 @@ The source package currently builds separate board packages for the Milk-V Duo
 board-specific `u-boot-menu` fragment under `/usr/share/u-boot-menu/conf.d/`
 so Debian's extlinux generation uses generic kernel `fdtdir` entries while
 U-Boot selects the correct board DTB via its per-defconfig `fdtfile`
-environment variable.
+environment variable. The package stages `fip.bin` under
+`/usr/lib/u-boot/<board>/` and copies it into `/boot/firmware/fip.bin` from
+postinst.
