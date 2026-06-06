@@ -1,3 +1,11 @@
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-16) unstable; urgency=medium
+
+  * Enable the vendor UHS capability flags and 200 MHz SD host ceiling in the
+    SG2002 distroboot DTBs so U-Boot can negotiate high-capacity cards more
+    like the downstream BSP.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sat, 06 Jun 2026 22:55:00 +0900
+
 u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-15) unstable; urgency=medium
 
   * Enable U-Boot Btrfs support in the shipped SG2002 defconfigs so

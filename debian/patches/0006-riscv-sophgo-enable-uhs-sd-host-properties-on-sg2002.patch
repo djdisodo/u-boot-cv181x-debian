@@ -1,0 +1,42 @@
+Description: enable UHS SD host properties on SG2002 distroboot DTBs
+Author: Packaging Maintainer <maintainer@example.com>
+Forwarded: not-yet
+
+--- a/arch/riscv/dts/sg2002-licheerv-nano-b.dts
++++ b/arch/riscv/dts/sg2002-licheerv-nano-b.dts
+@@ -35,9 +35,15 @@
+ &sdhci0 {
+ 	status = "okay";
+ 	bus-width = <4>;
+-	no-1-8-v;
++	cap-sd-highspeed;
++	cap-mmc-highspeed;
++	sd-uhs-sdr12;
++	sd-uhs-sdr25;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
+ 	no-mmc;
+ 	no-sdio;
++	max-frequency = <200000000>;
+ };
+ 
+ &uart0 {
+--- a/arch/riscv/dts/sg2002-milkv-duo256m.dts
++++ b/arch/riscv/dts/sg2002-milkv-duo256m.dts
+@@ -35,9 +35,15 @@
+ &sdhci0 {
+ 	status = "okay";
+ 	bus-width = <4>;
+-	no-1-8-v;
++	cap-sd-highspeed;
++	cap-mmc-highspeed;
++	sd-uhs-sdr12;
++	sd-uhs-sdr25;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
+ 	no-mmc;
+ 	no-sdio;
++	max-frequency = <200000000>;
+ };
+ 
+ &uart0 {
