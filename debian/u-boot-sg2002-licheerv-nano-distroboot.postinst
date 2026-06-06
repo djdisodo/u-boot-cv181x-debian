@@ -1,0 +1,35 @@
+#!/bin/sh
+set -e
+exec </dev/null >&2
+
+fip_src="/usr/lib/u-boot/sg2002-licheerv-nano/fip.bin"
+fip_dst="/boot/firmware/fip.bin"
+
+install_fip() {
+	if [ ! -e "$fip_src" ]; then
+		return 0
+	fi
+
+	if [ ! -d /boot/firmware ]; then
+		echo "W: /boot/firmware is missing; skipping FIP install" >&2
+		return 0
+	fi
+
+	if ! grep -qs '[[:space:]]/boot/firmware[[:space:]]' /proc/mounts; then
+		echo "W: /boot/firmware is not mounted; skipping FIP install" >&2
+		return 0
+	fi
+
+	install -D -m0644 "$fip_src" "$fip_dst"
+}
+
+case "${1:-}" in
+	configure)
+		install_fip
+		if command -v u-boot-update >/dev/null 2>&1; then
+			u-boot-update
+		fi
+		;;
+esac
+
+#DEBHELPER#
