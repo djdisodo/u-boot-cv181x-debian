@@ -1,0 +1,267 @@
+Description: port the vendor CV18xx SD boot bring-up sequence into the packaged SDHCI driver
+Author: Packaging Maintainer <maintainer@example.com>
+Forwarded: not-yet
+
+--- a/drivers/mmc/cv1800b_sdhci.c
++++ b/drivers/mmc/cv1800b_sdhci.c
+@@ -6,9 +6,54 @@
+ #include <dm.h>
+ #include <mmc.h>
+ #include <sdhci.h>
++#include <asm/io.h>
+ #include <linux/delay.h>
+ 
++#define TOP_BASE               0x03000000
++#define PINMUX_BASE            (TOP_BASE + 0x1000)
++#define REG_TOP_SOFT_RST       0x3000
++#define BIT_TOP_SOFT_RST_SDIO  BIT(14)
++#define REG_TOP_SD_PWRSW_CTRL  0x1F4
++
++#define REG_SDIO0_PAD_SHIFT     2
++#define REG_SDIO0_PAD_CLR_MASK  0xC
++#define REG_SDIO0_CD_PAD_REG    (PINMUX_BASE + 0x900)
++#define REG_SDIO0_CD_PAD_VALUE  1
++#define REG_SDIO0_CD_PAD_RESET  1
++#define REG_SDIO0_PWR_EN_PAD_REG   (PINMUX_BASE + 0x904)
++#define REG_SDIO0_PWR_EN_PAD_VALUE 2
++#define REG_SDIO0_PWR_EN_PAD_RESET 2
++#define REG_SDIO0_CLK_PAD_REG   (PINMUX_BASE + 0xA00)
++#define REG_SDIO0_CLK_PAD_VALUE 2
++#define REG_SDIO0_CLK_PAD_RESET 2
++#define REG_SDIO0_CMD_PAD_REG   (PINMUX_BASE + 0xA04)
++#define REG_SDIO0_CMD_PAD_VALUE 1
++#define REG_SDIO0_CMD_PAD_RESET 2
++#define REG_SDIO0_DAT0_PAD_REG   (PINMUX_BASE + 0xA08)
++#define REG_SDIO0_DAT0_PAD_VALUE 1
++#define REG_SDIO0_DAT0_PAD_RESET 2
++#define REG_SDIO0_DAT1_PAD_REG   (PINMUX_BASE + 0xA0C)
++#define REG_SDIO0_DAT1_PAD_VALUE 1
++#define REG_SDIO0_DAT1_PAD_RESET 2
++#define REG_SDIO0_DAT2_PAD_REG   (PINMUX_BASE + 0xA10)
++#define REG_SDIO0_DAT2_PAD_VALUE 1
++#define REG_SDIO0_DAT2_PAD_RESET 2
++#define REG_SDIO0_DAT3_PAD_REG   (PINMUX_BASE + 0xA14)
++#define REG_SDIO0_DAT3_PAD_VALUE 1
++#define REG_SDIO0_DAT3_PAD_RESET 2
++
++#define PAD_SDIO0_CD_REG      (PINMUX_BASE + 0x18)
++#define PAD_SDIO0_PWR_EN_REG  (PINMUX_BASE + 0x1C)
++#define PAD_SDIO0_CLK_REG     (PINMUX_BASE + 0x0)
++#define PAD_SDIO0_CMD_REG     (PINMUX_BASE + 0x4)
++#define PAD_SDIO0_D0_REG      (PINMUX_BASE + 0x8)
++#define PAD_SDIO0_D1_REG      (PINMUX_BASE + 0xC)
++#define PAD_SDIO0_D2_REG      (PINMUX_BASE + 0x10)
++#define PAD_SDIO0_D3_REG      (PINMUX_BASE + 0x14)
++
++#define SDHCI_VENDOR_OFFSET   0x200
+ #define SDHCI_PHY_TX_RX_DLY  0x240
++#define SDHCI_PHY_CONFIG     0x24C
+ #define MMC_MAX_CLOCK        375000000
+ #define TUNE_MAX_PHCODE      128
+ 
+@@ -19,6 +64,122 @@
+ 	struct mmc mmc;
+ };
+ 
++struct cv1800b_sdhci_priv {
++	struct sdhci_host host;
++	u32 cfg_fmax;
++	u32 cfg_fmin;
++	bool reset_tx_rx_phy;
++};
++
++static void cv1800b_sd_pad_setting(bool reset)
++{
++	u32 value = reset ? REG_SDIO0_PWR_EN_PAD_RESET : REG_SDIO0_PWR_EN_PAD_VALUE;
++
++	clrsetbits_le32((void __iomem *)REG_SDIO0_PWR_EN_PAD_REG,
++			REG_SDIO0_PAD_CLR_MASK, value << REG_SDIO0_PAD_SHIFT);
++
++	value = reset ? REG_SDIO0_CD_PAD_RESET : REG_SDIO0_CD_PAD_VALUE;
++	clrsetbits_le32((void __iomem *)REG_SDIO0_CD_PAD_REG,
++			REG_SDIO0_PAD_CLR_MASK, value << REG_SDIO0_PAD_SHIFT);
++
++	value = reset ? REG_SDIO0_CLK_PAD_RESET : REG_SDIO0_CLK_PAD_VALUE;
++	clrsetbits_le32((void __iomem *)REG_SDIO0_CLK_PAD_REG,
++			REG_SDIO0_PAD_CLR_MASK, value << REG_SDIO0_PAD_SHIFT);
++
++	value = reset ? REG_SDIO0_CMD_PAD_RESET : REG_SDIO0_CMD_PAD_VALUE;
++	clrsetbits_le32((void __iomem *)REG_SDIO0_CMD_PAD_REG,
++			REG_SDIO0_PAD_CLR_MASK, value << REG_SDIO0_PAD_SHIFT);
++
++	value = reset ? REG_SDIO0_DAT0_PAD_RESET : REG_SDIO0_DAT0_PAD_VALUE;
++	clrsetbits_le32((void __iomem *)REG_SDIO0_DAT0_PAD_REG,
++			REG_SDIO0_PAD_CLR_MASK, value << REG_SDIO0_PAD_SHIFT);
++
++	value = reset ? REG_SDIO0_DAT1_PAD_RESET : REG_SDIO0_DAT1_PAD_VALUE;
++	clrsetbits_le32((void __iomem *)REG_SDIO0_DAT1_PAD_REG,
++			REG_SDIO0_PAD_CLR_MASK, value << REG_SDIO0_PAD_SHIFT);
++
++	value = reset ? REG_SDIO0_DAT2_PAD_RESET : REG_SDIO0_DAT2_PAD_VALUE;
++	clrsetbits_le32((void __iomem *)REG_SDIO0_DAT2_PAD_REG,
++			REG_SDIO0_PAD_CLR_MASK, value << REG_SDIO0_PAD_SHIFT);
++
++	value = reset ? REG_SDIO0_DAT3_PAD_RESET : REG_SDIO0_DAT3_PAD_VALUE;
++	clrsetbits_le32((void __iomem *)REG_SDIO0_DAT3_PAD_REG,
++			REG_SDIO0_PAD_CLR_MASK, value << REG_SDIO0_PAD_SHIFT);
++}
++
++static void cv1800b_sd_pad_function(bool unplug)
++{
++	u32 value = unplug ? 0x3 : 0x0;
++
++	writel(0x0, (void __iomem *)PAD_SDIO0_CD_REG);
++	writel(0x0, (void __iomem *)PAD_SDIO0_PWR_EN_REG);
++	writel(value, (void __iomem *)PAD_SDIO0_CLK_REG);
++	writel(value, (void __iomem *)PAD_SDIO0_CMD_REG);
++	writel(value, (void __iomem *)PAD_SDIO0_D0_REG);
++	writel(value, (void __iomem *)PAD_SDIO0_D1_REG);
++	writel(value, (void __iomem *)PAD_SDIO0_D2_REG);
++	writel(value, (void __iomem *)PAD_SDIO0_D3_REG);
++}
++
++static void cv1800b_sd_reset_host(void)
++{
++	clrbits_le32((void __iomem *)(TOP_BASE + REG_TOP_SOFT_RST),
++		     BIT_TOP_SOFT_RST_SDIO);
++	udelay(50);
++	setbits_le32((void __iomem *)(TOP_BASE + REG_TOP_SOFT_RST),
++		     BIT_TOP_SOFT_RST_SDIO);
++}
++
++static int cv1800b_sd_get_cd(struct sdhci_host *host)
++{
++	return !!(sdhci_readl(host, SDHCI_PRESENT_STATE) & SDHCI_CARD_PRESENT);
++}
++
++static void cv1800b_sd_set_control_reg(struct sdhci_host *host)
++{
++	u32 ctrl;
++
++	sdhci_set_voltage(host);
++	sdhci_set_uhs_timing(host);
++
++	if (!IS_SD(host->mmc))
++		return;
++
++	if (host->mmc->signal_voltage == MMC_SIGNAL_VOLTAGE_180) {
++		setbits_le32((void __iomem *)REG_SDIO0_CLK_PAD_REG,
++			     BIT(7) | BIT(6) | BIT(5));
++		writel(0xB, (void __iomem *)(TOP_BASE + REG_TOP_SD_PWRSW_CTRL));
++		mdelay(1);
++		return;
++	}
++
++	ctrl = sdhci_readw(host, SDHCI_HOST_CONTROL2);
++	ctrl &= ~SDHCI_CTRL_VDD_180;
++	sdhci_writew(host, ctrl, SDHCI_HOST_CONTROL2);
++	writel(0x9, (void __iomem *)(TOP_BASE + REG_TOP_SD_PWRSW_CTRL));
++	mdelay(1);
++}
++
++static int cv1800b_sd_set_ios_post(struct sdhci_host *host)
++{
++	u16 ctrl2;
++
++	ctrl2 = sdhci_readw(host, SDHCI_HOST_CONTROL2) & SDHCI_CTRL_UHS_MASK;
++
++	if (ctrl2 == SDHCI_CTRL_UHS_SDR104) {
++		clrbits_le32(host->ioaddr + SDHCI_VENDOR_OFFSET, BIT(1));
++		setbits_le32(host->ioaddr + SDHCI_VENDOR_OFFSET, BIT(16));
++		clrbits_le32(host->ioaddr + SDHCI_PHY_CONFIG, BIT(0));
++		sdhci_writel(host, BIT(8), SDHCI_PHY_TX_RX_DLY);
++	} else {
++		setbits_le32(host->ioaddr + SDHCI_VENDOR_OFFSET, BIT(1) | BIT(16));
++		setbits_le32(host->ioaddr + SDHCI_PHY_CONFIG, BIT(0));
++		sdhci_writel(host, 0x1000100, SDHCI_PHY_TX_RX_DLY);
++	}
++
++	return 0;
++}
++
+ #if CONFIG_IS_ENABLED(MMC_SUPPORTS_TUNING)
+ static void cv1800b_set_tap_delay(struct sdhci_host *host, u16 tap)
+ {
+@@ -68,6 +229,9 @@
+ #if CONFIG_IS_ENABLED(MMC_SUPPORTS_TUNING)
+ 	.platform_execute_tuning = cv1800b_execute_tuning,
+ #endif
++	.get_cd = cv1800b_sd_get_cd,
++	.set_control_reg = cv1800b_sd_set_control_reg,
++	.set_ios_post = cv1800b_sd_set_ios_post,
+ };
+ 
+ static int cv1800b_sdhci_bind(struct udevice *dev)
+@@ -81,28 +245,59 @@
+ {
+ 	struct mmc_uclass_priv *upriv = dev_get_uclass_priv(dev);
+ 	struct cv1800b_sdhci_plat *plat = dev_get_plat(dev);
+-	struct sdhci_host *host = dev_get_priv(dev);
++	struct cv1800b_sdhci_priv *priv = dev_get_priv(dev);
++	struct sdhci_host *host = &priv->host;
++	int present;
+ 	int ret;
+ 
+ 	host->name = dev->name;
+ 	host->ioaddr = devfdt_get_addr_ptr(dev);
++	host->max_clk = dev_read_u32_default(dev, "src-frequency", MMC_MAX_CLOCK);
++	priv->cfg_fmax = dev_read_u32_default(dev, "max-frequency", 0);
++	priv->cfg_fmin = dev_read_u32_default(dev, "min-frequency", 200000);
++	priv->reset_tx_rx_phy = dev_read_bool(dev, "reset_tx_rx_phy");
+ 
+ 	upriv->mmc = &plat->mmc;
+ 	host->mmc = &plat->mmc;
+ 	host->mmc->priv = host;
+ 	host->mmc->dev = dev;
+ 	host->ops = &cv1800b_sdhci_sd_ops;
+-	host->max_clk = MMC_MAX_CLOCK;
+ 
+ 	ret = mmc_of_parse(dev, &plat->cfg);
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = sdhci_setup_cfg(&plat->cfg, host, 0, 200000);
++	if (dev_read_bool(dev, "no-1-8-v"))
++		host->quirks |= SDHCI_QUIRK_NO_1_8_V;
++
++	ret = sdhci_setup_cfg(&plat->cfg, host, priv->cfg_fmax, priv->cfg_fmin);
+ 	if (ret)
+ 		return ret;
+ 
+-	return sdhci_probe(dev);
++	cv1800b_sd_reset_host();
++
++	present = cv1800b_sd_get_cd(host);
++	if (present) {
++		writel(0x9, (void __iomem *)(TOP_BASE + REG_TOP_SD_PWRSW_CTRL));
++		cv1800b_sd_pad_function(false);
++		cv1800b_sd_pad_setting(false);
++	} else {
++		writel(0xE, (void __iomem *)(TOP_BASE + REG_TOP_SD_PWRSW_CTRL));
++		cv1800b_sd_pad_function(true);
++		cv1800b_sd_pad_setting(true);
++	}
++
++	ret = sdhci_probe(dev);
++	if (ret)
++		return ret;
++
++	if (priv->reset_tx_rx_phy) {
++		sdhci_writel(host, 0x2, SDHCI_VENDOR_OFFSET);
++		sdhci_writel(host, 0x1000100, SDHCI_PHY_TX_RX_DLY);
++		sdhci_writel(host, 0x1, SDHCI_PHY_CONFIG);
++	}
++
++	return 0;
+ }
+ 
+ static const struct udevice_id cv1800b_sdhci_match[] = {
+@@ -116,7 +311,7 @@
+ 	.of_match = cv1800b_sdhci_match,
+ 	.bind = cv1800b_sdhci_bind,
+ 	.probe = cv1800b_sdhci_probe,
+-	.priv_auto = sizeof(struct sdhci_host),
++	.priv_auto = sizeof(struct cv1800b_sdhci_priv),
+ 	.plat_auto = sizeof(struct cv1800b_sdhci_plat),
+ 	.ops = &sdhci_ops,
+ };

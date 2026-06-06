@@ -1,3 +1,14 @@
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-17) unstable; urgency=medium
+
+  * Keep the SG2002 distroboot SD host on the safer 3.3 V boot path while
+    carrying over the vendor clock and PHY-reset hints needed by the packaged
+    driver.
+  * Port the downstream CV18xx SD pad, power-switch, reset, and default PHY
+    register setup into the packaged cv1800b SDHCI driver so large SD cards
+    can be reprobed reliably after U-Boot starts.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sat, 06 Jun 2026 19:05:00 +0900
+
 u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-16) unstable; urgency=medium
 
   * Enable the vendor UHS capability flags and 200 MHz SD host ceiling in the
