@@ -1,42 +1,36 @@
-Description: enable UHS SD host properties on SG2002 distroboot DTBs
+Description: add safe vendor-style SD host defaults to SG2002 distroboot DTBs
 Author: Packaging Maintainer <maintainer@example.com>
 Forwarded: not-yet
 
 --- a/arch/riscv/dts/sg2002-licheerv-nano-b.dts
 +++ b/arch/riscv/dts/sg2002-licheerv-nano-b.dts
-@@ -35,9 +35,15 @@
+@@ -35,9 +35,13 @@
  &sdhci0 {
  	status = "okay";
  	bus-width = <4>;
--	no-1-8-v;
-+	cap-sd-highspeed;
-+	cap-mmc-highspeed;
-+	sd-uhs-sdr12;
-+	sd-uhs-sdr25;
-+	sd-uhs-sdr50;
-+	sd-uhs-sdr104;
++	src-frequency = <375000000>;
++	min-frequency = <400000>;
++	max-frequency = <200000000>;
++	reset_tx_rx_phy;
+ 	no-1-8-v;
  	no-mmc;
  	no-sdio;
-+	max-frequency = <200000000>;
  };
  
  &uart0 {
 --- a/arch/riscv/dts/sg2002-milkv-duo256m.dts
 +++ b/arch/riscv/dts/sg2002-milkv-duo256m.dts
-@@ -35,9 +35,15 @@
+@@ -35,9 +35,13 @@
  &sdhci0 {
  	status = "okay";
  	bus-width = <4>;
--	no-1-8-v;
-+	cap-sd-highspeed;
-+	cap-mmc-highspeed;
-+	sd-uhs-sdr12;
-+	sd-uhs-sdr25;
-+	sd-uhs-sdr50;
-+	sd-uhs-sdr104;
++	src-frequency = <375000000>;
++	min-frequency = <400000>;
++	max-frequency = <200000000>;
++	reset_tx_rx_phy;
+ 	no-1-8-v;
  	no-mmc;
  	no-sdio;
-+	max-frequency = <200000000>;
  };
  
  &uart0 {

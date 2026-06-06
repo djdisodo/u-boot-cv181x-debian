@@ -4,3 +4,4 @@
 0004-opensbi-platform-generic-force-single-fw-region-on-sg2002.patch
 0005-riscv-sophgo-enable-board-ephy-init-for-sg2002.patch
 0006-riscv-sophgo-enable-uhs-sd-host-properties-on-sg2002.patch
+0007-drivers-mmc-cv1800b-port-vendor-sd-boot-sequence.patch
