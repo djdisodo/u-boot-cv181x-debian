@@ -1,3 +1,10 @@
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-19) unstable; urgency=medium
+
+  * Enable board_init for the SG2002 NanoKVM PCIe flavor so the packaged
+    CV18xx internal Ethernet PHY setup runs before Linux boots.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sat, 18 Jul 2026 04:42:00 +0900
+
 u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-18) unstable; urgency=medium
 
   * Add the SG2002 NanoKVM PCIe distroboot package flavor and default

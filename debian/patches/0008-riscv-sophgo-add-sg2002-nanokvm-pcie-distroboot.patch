@@ -64,7 +64,7 @@ index 0000000..e83dc2b
 +};
 diff --git a/configs/sg2002_nanokvm_pcie_defconfig b/configs/sg2002_nanokvm_pcie_defconfig
 new file mode 100644
-index 0000000..f59300f
+index 0000000..99f53de
 --- /dev/null
 +++ b/configs/sg2002_nanokvm_pcie_defconfig
 @@ -0,0 +1,56 @@
@@ -88,7 +88,7 @@ index 0000000..f59300f
 +CONFIG_BOOTCOMMAND="run distro_bootcmd"
 +CONFIG_SYS_CBSIZE=512
 +CONFIG_SYS_PBSIZE=544
-+# CONFIG_BOARD_INIT is not set
++CONFIG_BOARD_INIT=y
 +CONFIG_SYS_PROMPT="sg2002_nanokvm_pcie# "
 +# CONFIG_CMD_BOOTDEV is not set
 +CONFIG_CMD_MBR=y
