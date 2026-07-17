@@ -1,3 +1,10 @@
+u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-18) unstable; urgency=medium
+
+  * Add the SG2002 NanoKVM PCIe distroboot package flavor and default
+    extlinux DTB selection for sg2002-nanokvm-pcie.dtb.
+
+ -- Packaging Maintainer <maintainer@example.com>  Sat, 18 Jul 2026 03:09:47 +0900
+
 u-boot-sg2002-milkv-duo256m-distroboot (2026.04+~1.8.1-17) unstable; urgency=medium
 
   * Keep the SG2002 distroboot SD host on the safer 3.3 V boot path while

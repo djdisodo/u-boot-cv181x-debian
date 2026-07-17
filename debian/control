@@ -27,9 +27,11 @@ Depends:
  rsync,
  u-boot-menu
 Conflicts:
- u-boot-sg2002-licheerv-nano-distroboot
+ u-boot-sg2002-licheerv-nano-distroboot,
+ u-boot-sg2002-nanokvm-pcie-distroboot
 Replaces:
- u-boot-sg2002-licheerv-nano-distroboot
+ u-boot-sg2002-licheerv-nano-distroboot,
+ u-boot-sg2002-nanokvm-pcie-distroboot
 Description: U-Boot and source-built OpenSBI FIP for Milk-V Duo 256M
  Builds U-Boot for the Milk-V Duo 256M from upstream U-Boot sources,
  builds OpenSBI from source, embeds an upstream-kernel-based board DTB,
@@ -43,11 +45,31 @@ Depends:
  rsync,
  u-boot-menu
 Conflicts:
- u-boot-sg2002-milkv-duo256m-distroboot
+ u-boot-sg2002-milkv-duo256m-distroboot,
+ u-boot-sg2002-nanokvm-pcie-distroboot
 Replaces:
- u-boot-sg2002-milkv-duo256m-distroboot
+ u-boot-sg2002-milkv-duo256m-distroboot,
+ u-boot-sg2002-nanokvm-pcie-distroboot
 Description: U-Boot and source-built OpenSBI FIP for Sipeed LicheeRV Nano
  Builds U-Boot for the Sipeed LicheeRV Nano from upstream U-Boot sources,
+ builds OpenSBI from source, embeds an upstream-kernel-based board DTB,
+ sets the default U-Boot environment for distroboot DT selection, and packages
+ the resulting firmware artifacts as a Debian package.
+
+Package: u-boot-sg2002-nanokvm-pcie-distroboot
+Architecture: all
+Depends:
+ ${misc:Depends},
+ rsync,
+ u-boot-menu
+Conflicts:
+ u-boot-sg2002-milkv-duo256m-distroboot,
+ u-boot-sg2002-licheerv-nano-distroboot
+Replaces:
+ u-boot-sg2002-milkv-duo256m-distroboot,
+ u-boot-sg2002-licheerv-nano-distroboot
+Description: U-Boot and source-built OpenSBI FIP for Sipeed NanoKVM PCIe
+ Builds U-Boot for the Sipeed NanoKVM PCIe from upstream U-Boot sources,
  builds OpenSBI from source, embeds an upstream-kernel-based board DTB,
  sets the default U-Boot environment for distroboot DT selection, and packages
  the resulting firmware artifacts as a Debian package.

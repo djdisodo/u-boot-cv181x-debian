@@ -1,0 +1,6 @@
+debian/build/out/sg2002-nanokvm-pcie/fip.bin usr/lib/u-boot/sg2002-nanokvm-pcie/
+debian/build/out/sg2002-nanokvm-pcie/fw_dynamic.bin usr/lib/u-boot/sg2002-nanokvm-pcie/
+debian/build/out/sg2002-nanokvm-pcie/sg2002-nanokvm-pcie-opensbi.dtb usr/lib/u-boot/sg2002-nanokvm-pcie/
+debian/build/out/sg2002-nanokvm-pcie/u-boot.bin usr/lib/u-boot/sg2002-nanokvm-pcie/
+debian/build/out/sg2002-nanokvm-pcie/build.env usr/lib/u-boot/sg2002-nanokvm-pcie/
+debian/u-boot-menu-sg2002-nanokvm-pcie.conf usr/share/u-boot-menu/conf.d/
